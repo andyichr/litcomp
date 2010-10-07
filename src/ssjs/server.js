@@ -179,7 +179,8 @@ var WIKITEXT_IN = argv["wiki-html-in"];
 			"literal": function(req, res) {
 				var reqUrl = url.parse(req.url)
 				var reqPath = reqUrl.pathname;
-				var wikiFile = pathToPageTitle(reqPath) + ".wiki";
+				var title = pathToPageTitle(reqPath.substring("literal".length));
+				var wikiFile = pathToPageTitle(title) + ".wiki";
 				console.log("Serving wiki page: " + wikiFile);
 				readFile(WIKI_DIR + "/" + wikiFile, function() { return res }, {
 					"readable": function() {
@@ -267,6 +268,7 @@ var WIKITEXT_IN = argv["wiki-html-in"];
 
 	var pathRewriteTable = {
 		"/": "/Index",
+		"/literal/": "/literal/Index",
 		"/favicon.ico": "/res/favicon.ico"
 	};
 
