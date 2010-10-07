@@ -1,0 +1,69 @@
+<h2>Objective</h2>
+
+<ul>
+  <li>
+    Enable execution of source blocks
+    <ul>
+      <li>Add Run link to header prior to source block</li>
+      <li>
+        Define new request type which executes blocks by section id
+        <ul>
+          <li>section id {page hash, fragment index}</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<h2>TODO</h2>
+
+<ul>
+  <li>fix encoding as UTF-8 before progressing with further development.</li>
+  <li>define article title character white list (regex) and ensure that it is used throughout</li>
+  <li>
+    define server-side behavior to add program fragment microdata
+    <ul>
+      <li>parse and walk tree using jsoup</li>
+      <li>store last section id, defaulting to article title</li>
+      <li>store last header element</li>
+      <li>upon encountering a program fragment, add program fragment microdata to header element</li>
+      <li>define client-side behavior to add Run link according to program fragment microdata</li>
+    </ul>
+  </li>
+  <li>define server-side behavior to get/set source by "section id" in the form of "Article#Heading"</li>
+  <li>define server-side behavior to execute programs by section id and stream stdout/stderr to client via COMET</li>
+  <li><s>determine how Wikipedia represents source code blocks</s></li>
+</ul>
+
+<h2>Running a Fragment</h2>
+
+<p>A program fragment must be identified uniquely if it is to be executed by the server. Program fragments can be identified uniquely using a combination of fragment index and page hash. Including page hash as a component of the identifier ensures that the index of the program fragment will not have changed in the time between when the page was sent to the client and when the server was requested to run the fragment.</p>
+
+<h2>Test Wiki Page test</h2>
+
+<p><a href="link/to/folder">link/to/folder</a></p>
+
+<script>
+  console.log("HERE");
+  console.log($);
+</script>
+
+<p>
+  This is a test page
+  <a href="Another Page">Link to another page!</a>
+</p>
+
+<p>
+  This is
+  an additional paragraph.
+</p>
+
+<div>Test</div>
+
+<h3>3rd-Level Heading</h3>
+
+<pre class="source" data-lang="perl">
+system qw[wikirun "System#Data"]; # client to recognize this as link to wiki page
+
+print "hello"
+</pre>

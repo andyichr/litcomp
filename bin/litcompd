@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+if [ $# -ne 1 ]; then
+	echo "Usage: litcompd LITCOMP_HOME" 1>&2
+	exit 1
+fi
+
+LITCOMP_HOME="$1"
+
+echo "Starting LitComp in: $LITCOMP_HOME"
+
+mkdir "$LITCOMP_HOME"/tmp 2>/dev/null || true
+IN_FIFO="$LITCOMP_HOME"/tmp/wp.in
+OUT_FIFO="$LITCOMP_HOME"/tmp/wp.out
+rm -rf "$IN_FIFO"
+rm -rf "$OUT_FIFO"
+mkfifo "$IN_FIFO"
+mkfifo "$OUT_FIFO"
+
+#TODO start wikitext processor as coprocess
+cat "$IN_FIFO" | java -jar dist/WikitextProcessor*jar > "$OUT_FIFO" &
+
+/usr/bin/env node src/ssjs/server.js \
+		--res-dir="$LITCOMP_HOME/res" \
+		--wiki-dir="$LITCOMP_HOME/test/wiki" \
+		--wiki-src-out="$IN_FIFO" \
+		--wiki-html-in="$OUT_FIFO"
