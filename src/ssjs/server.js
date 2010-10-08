@@ -48,6 +48,59 @@ var WIKITEXT_IN = argv["wiki-html-in"];
 		"*": "application/octet-stream"
 	};
 
+	/**
+	 * @param int set size
+	 * @return array of random integers
+	 */
+	var entropy = (function() {
+		var is = fs.createReadStream("/dev/random");
+		//is.pause();
+		var req = [];
+
+		is.on("data", function(data) {
+
+			// stop reading when all requests are satisfied
+			if (!req.length) {
+				is.pause();
+				return;
+			}
+
+			// dump buffer contents into current request
+			var curReq = req[req.length-1];
+			var i = 0;
+
+			while (curReq.set.length < curReq.setSize && i < data.length) {
+				curReq.set.push(data[i]%10);
+				i++;
+			}
+
+			// request satisfied
+			if (curReq.set.length == curReq.setSize) {
+				curReq.success(curReq.set);
+				req.pop();
+			}
+
+		});
+
+		return function(setSize, success) {
+			req.push({
+				"setSize": setSize,
+				"success": success,
+				"set": []
+			});
+			is.resume();
+		};
+	}());
+
+	/**
+	 * temporary file name
+	 */
+	var tmpWikiFileName = function(success) {
+		entropy(64, function(set) {
+			success(WIKI_DIR + "/.tmp." + set.join(""));
+		});
+	};
+
 	// define behavior to be invoked as changes in files occur
 	var updateFile = function() {};
 	var readFile = (function() {
@@ -260,8 +313,72 @@ var WIKITEXT_IN = argv["wiki-html-in"];
 			/**
 			 * serve requests to subtitute contents of wiki pages
 			 */
-			"*": function() {
-				//TODO implement
+			"*": function(req, res) {
+				var reqUrl = url.parse(req.url)
+				var reqPath = reqUrl.pathname;
+				var title = pathToPageTitle(reqPath);
+				var wikiFile = WIKI_DIR + "/" + title + ".wiki";
+				var dataBuf = [];
+				var ended = false;
+
+				console.log("Attempting to write new contents to '" + wikiFile + "'");
+
+				var onData = function(chunk) {
+					dataBuf.push(chunk);
+				};
+
+				var onEnd = function() {
+					ended = true;
+				};
+
+				req.on("data", function(chunk) { onData(chunk) });
+				req.on("end", function() { onEnd() });
+
+				tmpWikiFileName(function(wikiTmpFile) {
+					var os = fs.createWriteStream(wikiTmpFile);
+
+					// write buffered data
+					while (dataBuf.length) {
+						os.write(dataBuf.shift());
+					}
+
+					// append req body to temp file over series of chunks
+					var wrote = false;
+					onData = function(chunk) {
+						wrote = os.write(chunk);
+					};
+
+					//TODO replace target file with tmp file
+					onEnd = function() {
+
+						var onDrain = function() {
+							os.end();
+							fs.rename(wikiTmpFile, wikiFile, function(err) {
+								if (err) {
+									res.writeHead(500);
+									res.end();
+									console.log("Error writing wiki file '" + wikiFile + "': '" + err + "'");
+									return;
+								}
+
+								console.log("Wrote new contents to wiki file: " + wikiFile);
+								updateFile(wikiFile);
+								res.writeHead(200);
+								res.end();
+							});
+						};
+
+						if (wrote) {
+							onDrain();
+						} else {
+							os.on("drain", function() { onDrain() });
+						}
+					};
+
+					if (ended) {
+						onEnd();
+					}
+				});
 			}
 		}
 	};
