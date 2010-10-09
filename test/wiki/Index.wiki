@@ -1,6 +1,6 @@
 <h2>Synopsis</h2>
 
-<p><a href="http://en.wikipedia.org/wiki/Literate_programming">Literate programming</a>, an idea of <a href="http://en.wikipedia.org/wiki/Donald_knuth">D.E. Knuth</a>, proposes a new method of program design. Knuth's ideas can be applied in the context of modern-day <a href="http://en.wikipedia.org/wiki/Unix">UNIX</a> systems. The system you are interacting with now is one such application. UNIX systems are typically controlled by means of an interactive shell program, such as sh. System control is essentially the same as any other program, and so the concepts of literate computing can be applied to this domain.</p>
+<p><a href="http://en.wikipedia.org/wiki/Literate_programming">Literate programming</a>, an idea conceived by <a href="http://en.wikipedia.org/wiki/Donald_knuth">D.E. Knuth</a>, proposes a new method of program design. Knuth's idea can be applied in the context of modern-day <a href="http://en.wikipedia.org/wiki/Unix">UNIX</a> systems. The system you are interacting with now is one such application. UNIX systems are typically controlled by means of an interactive shell program, such as sh. System control is essentially the same as any other program, and so the concepts of literate computing can be applied to this domain.</p>
 
 <p>If you're interested in the idea, <a href="http://offsite.andyic.org/LitComp.dmg"><strong>download</strong></a> the latest distribution now. There's no need to read any further, as the application is entirely self-documented.</p>
 
@@ -13,17 +13,8 @@
 <ul>
   <li>Applications may be edited in the familiar context of a web browser.</li>
   <li>Live hyperlinks to content across the web may be included.</li>
-  <li>HTML5 microdata may be used in order to define a structured meaning of content.</li>
+  <li>HTML5 microdata may be used to define the meaning of content.</li>
   <li>Program fragments of any language may be embedded.</li>
-</ul>
-
-<h2>Example Applications</h2>
-
-<ul>
-  <li><a href="Web_Based_Music_System">Web Based Music System</a></li>
-  <li><a href="Two-Dimensional_Artwork">Two-Dimensional Artwork</a></li>
-  <li><a href="Music_Production">Music Production</a></li>
-  <li><a href="Statistical_Analysis_of_Web_Data">Statistical Analysis of Web Data</a></li>
 </ul>
 
 <h2>Contributing</h2>
