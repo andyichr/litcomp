@@ -15,6 +15,7 @@ var WikitextProcessor = require("./WikitextProcessor").WikitextProcessor;
 var argv = require("../../lib/optimist/optimist")
 		.demand(["res-dir", "wiki-dir", "wiki-src-out", "wiki-html-in"])
 		.argv;
+var io = require("../../lib/Socket.IO");
 
 var RES_DIR = argv["res-dir"];
 var WIKI_DIR = argv["wiki-dir"];
@@ -54,7 +55,6 @@ var WIKITEXT_IN = argv["wiki-html-in"];
 	 */
 	var entropy = (function() {
 		var is = fs.createReadStream("/dev/random");
-		//is.pause();
 		var req = [];
 
 		is.on("data", function(data) {
@@ -348,11 +348,11 @@ var WIKITEXT_IN = argv["wiki-html-in"];
 						wrote = os.write(chunk);
 					};
 
-					//TODO replace target file with tmp file
 					onEnd = function() {
 
 						var onDrain = function() {
 							os.end();
+							// replace target file with tmp file
 							fs.rename(wikiTmpFile, wikiFile, function(err) {
 								if (err) {
 									res.writeHead(500);
@@ -399,7 +399,7 @@ var WIKITEXT_IN = argv["wiki-html-in"];
 	/**
 	 * the HTTP server created as a result of the following procedure is the primary function of this program
 	 */
-	http.createServer(function (req, res) {
+	var server = http.createServer(function (req, res) {
 		var reqUrl = url.parse(req.url);
 		var reqPath = reqUrl.pathname;
 
@@ -438,7 +438,22 @@ var WIKITEXT_IN = argv["wiki-html-in"];
 
 		// a handler has been resolved for the request, so request processing may continue
 		pathHandler(req, res);
-	}).listen(8070, "127.0.0.1");
+	});
+	server.listen(8070, "127.0.0.1");
+
+	// handle realtime communication
+	var socket = io.listen(server);
+	socket.on("connection", function(client) {
+		console.log("client connected");
+		client.on("message", function(data) {
+			console.log("client message: " + data.toString());
+			//TODO implement
+		});
+		client.on("disconnect", function() {
+			console.log("client disconnected");
+			//TODO implement
+		});
+	});
 }());
 
 console.log("Server running at http://127.0.0.1:8070/");

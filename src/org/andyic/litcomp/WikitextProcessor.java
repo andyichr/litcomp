@@ -75,7 +75,8 @@ public class WikitextProcessor {
 				}
 				
 				String wikitext = new String(wikitextBuf,0,wikitextLength,"UTF-8");
-				String output = wikitextToXhtml(wikitext);
+				Vector<Integer> runIndexes = new Vector<Integer>();
+				String output = wikitextToXhtml(wikitext, runIndexes);
 				byte[] outBytes = output.getBytes("UTF-8");
 
 				// calculate hash of page
@@ -101,6 +102,7 @@ public class WikitextProcessor {
 				// build page metadata
 				meta.put("title", title);
 				meta.put("hash", hash);
+				meta.put("runIndexes", runIndexes);
 				StringBuilder pageMetaStringBuilder = new StringBuilder();
 				pageMetaStringBuilder.append("<script>");
 				pageMetaStringBuilder.append("var pageMeta = ");
@@ -120,44 +122,42 @@ public class WikitextProcessor {
 		}
 	}
 
-	protected static String wikitextToXhtml(final String inputHTML) throws IOException {
+	protected static String wikitextToXhtml(final String inputHTML, final Vector<Integer> runIndexes) throws IOException {
 
 		// parse input with JSOUP
 		class Walker {
-			private Element lastHeader;
+			private int runIndex;
 
-			Walker(Element lastHeader) {
-				this.lastHeader = lastHeader;
+			Walker(int runIndex) {
+				this.runIndex = runIndex;
 			}
 
-			public Element walk(Element el) {
+			public int walk(Element el) {
 				Elements children = el.children();
 				String tagName = el.tagName().toLowerCase();
 
 				if (tagName.matches("h[1-6]")) {
-					lastHeader = el;
+					System.err.println("HEADER");
+					System.err.println(el.toString());
+					runIndex++;
 				} else if (tagName.equals("pre")) {
 					String className = el.attr("class");
 					if (className.equals("source")) {
-						if (lastHeader != null) {
-							lastHeader.attr("data-runnable", "runnable");
-						}
+						System.err.println("INDEX: " + runIndex);
+						runIndexes.add(new Integer(runIndex));
 					}
 				}
 
 				for (Element child : children) {
-					Element newLastHeader = (new Walker(lastHeader)).walk(child);
-					if (newLastHeader != null) {
-						lastHeader = newLastHeader;
-					}
+					runIndex = (new Walker(runIndex)).walk(child);
 				}
 
-				return lastHeader;
+				return runIndex;
 			}
 		}
 
 		Document doc = Jsoup.parseBodyFragment(inputHTML);
-		(new Walker(null)).walk(doc.body());
+		(new Walker(0)).walk(doc.body());
 
 		// serialize DOM to XHTML and write to os
 		Element body = doc.body();
