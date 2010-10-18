@@ -6,14 +6,16 @@
  *     --wiki-dir=[WIKI DIR]
  *     --wiki-src-out=[file descriptor to which literal wikitext is written]
  *     --wiki-html-in=[file descriptor from which processed wikitext (HTML) is read]
+ *     --indexer-out=[file descriptor to which literal wikitext is written]
  */
 
 var http = require("http");
 var url = require("url");
 var fs = require("fs");
 var WikitextProcessor = require("./WikitextProcessor").WikitextProcessor;
+var Indexer = require("./Indexer").Indexer;
 var argv = require("../../lib/optimist/optimist")
-		.demand(["res-dir", "wiki-dir", "wiki-src-out", "wiki-html-in"])
+		.demand(["res-dir", "wiki-dir", "wiki-src-out", "wiki-html-in", "indexer-out"])
 		.argv;
 var io = require("../../lib/Socket.IO");
 
@@ -21,6 +23,7 @@ var RES_DIR = argv["res-dir"];
 var WIKI_DIR = argv["wiki-dir"];
 var WIKITEXT_OUT = argv["wiki-src-out"];
 var WIKITEXT_IN = argv["wiki-html-in"];
+var INDEXER_OUT = argv["indexer-out"];
 
 (function() {
 	/**
@@ -33,6 +36,8 @@ var WIKITEXT_IN = argv["wiki-html-in"];
 				"encoding": null,
 				"mode": 0666,
 				"bufferSize": 1}));
+
+	var indexer = new Indexer(fs.createWriteStream(INDEXER_OUT));
 
 	var pathToPageTitle = function(path) {
 		return path.substring(1).replace(/[^a-zA-Z0-9.-]/, "_");
@@ -273,7 +278,7 @@ var WIKITEXT_IN = argv["wiki-html-in"];
 					}
 
 					footerMarkup = data;
-				})
+				});
 
 				return function(req, res) {
 					var reqUrl = url.parse(req.url)
@@ -334,49 +339,59 @@ var WIKITEXT_IN = argv["wiki-html-in"];
 				req.on("data", function(chunk) { onData(chunk) });
 				req.on("end", function() { onEnd() });
 
-				tmpWikiFileName(function(wikiTmpFile) {
-					var os = fs.createWriteStream(wikiTmpFile);
+				//FIXME add timeout so that client cannot halt indexing with bad request
+				indexer.index({
+					"title": title,
+					"size": req.headers["content-length"],
+					"streamReady": function(indexerOs) {
+						tmpWikiFileName(function(wikiTmpFile) {
+							var os = fs.createWriteStream(wikiTmpFile);
 
-					// write buffered data
-					while (dataBuf.length) {
-						os.write(dataBuf.shift());
-					}
+							// write buffered data
+							while (dataBuf.length) {
+								var curBuf = dataBuf.shift();
+								indexerOs.write(curBuf);
+								os.write(curBuf);
+							}
 
-					// append req body to temp file over series of chunks
-					var wrote = false;
-					onData = function(chunk) {
-						wrote = os.write(chunk);
-					};
+							// append req body to temp file over series of chunks
+							var wrote = false;
+							onData = function(chunk) {
+								indexerOs.write(chunk);
+								wrote = os.write(chunk);
+							};
 
-					onEnd = function() {
+							onEnd = function() {
 
-						var onDrain = function() {
-							os.end();
-							// replace target file with tmp file
-							fs.rename(wikiTmpFile, wikiFile, function(err) {
-								if (err) {
-									res.writeHead(500);
-									res.end();
-									console.log("Error writing wiki file '" + wikiFile + "': '" + err + "'");
-									return;
+								var onDrain = function() {
+									os.end();
+									// replace target file with tmp file
+									fs.rename(wikiTmpFile, wikiFile, function(err) {
+										if (err) {
+											res.writeHead(500);
+											res.end();
+											console.log("Error writing wiki file '" + wikiFile + "': '" + err + "'");
+											return;
+										}
+
+										console.log("Wrote new contents to wiki file: " + wikiFile);
+										updateFile(wikiFile);
+										res.writeHead(200);
+										res.end();
+									});
+								};
+
+								if (wrote) {
+									onDrain();
+								} else {
+									os.on("drain", function() { onDrain() });
 								}
+							};
 
-								console.log("Wrote new contents to wiki file: " + wikiFile);
-								updateFile(wikiFile);
-								res.writeHead(200);
-								res.end();
-							});
-						};
-
-						if (wrote) {
-							onDrain();
-						} else {
-							os.on("drain", function() { onDrain() });
-						}
-					};
-
-					if (ended) {
-						onEnd();
+							if (ended) {
+								onEnd();
+							}
+						});
 					}
 				});
 			}

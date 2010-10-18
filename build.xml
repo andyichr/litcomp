@@ -36,19 +36,9 @@
     <jarjar jarfile="${dist}/LitComp-${ver}.jar">
 			<fileset dir="${build}"/>
 			<zipfileset src="lib/json_simple-1.1.jar"/>
-			<zipfileset src="lib/commons-io-1.4.jar"/>
 			<zipfileset src="lib/jsoup-1.3.2.jar"/>
-			<zipfileset src="lib/org.wikimodel.wem-2.0.7-SNAPSHOT.jar"/>
       <manifest>
         <attribute name="Main-Class" value="org.andyic.litcomp.LitComp"/>
-      </manifest>
-    </jarjar>
-    <jarjar jarfile="${dist}/WikitextProcessor-${ver}.jar">
-			<fileset dir="${build}"/>
-			<zipfileset src="lib/json_simple-1.1.jar"/>
-			<zipfileset src="lib/jsoup-1.3.2.jar"/>
-      <manifest>
-        <attribute name="Main-Class" value="org.andyic.litcomp.WikitextProcessor"/>
       </manifest>
     </jarjar>
   </target>

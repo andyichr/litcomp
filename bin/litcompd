@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 if [ $# -ne 1 ]; then
 	echo "Usage: litcompd LITCOMP_HOME" 1>&2
@@ -12,16 +13,22 @@ echo "Starting LitComp in: $LITCOMP_HOME"
 mkdir "$LITCOMP_HOME"/tmp 2>/dev/null || true
 IN_FIFO="$LITCOMP_HOME"/tmp/wp.in
 OUT_FIFO="$LITCOMP_HOME"/tmp/wp.out
+INDEXER_IN_FIFO="$LITCOMP_HOME"/tmp/indexer.in
 rm -rf "$IN_FIFO"
 rm -rf "$OUT_FIFO"
+rm -rf "$INDEXER_IN_FIFO"
 mkfifo "$IN_FIFO"
 mkfifo "$OUT_FIFO"
+mkfifo "$INDEXER_IN_FIFO"
 
-#TODO start wikitext processor as coprocess
-cat "$IN_FIFO" | java -jar dist/WikitextProcessor*jar > "$OUT_FIFO" &
+# start wikitext processor as coprocess
+mkdir -p "$LITCOMP_HOME/test/wiki_index" 2>/dev/null || true
+java -cp dist/LitComp*jar org.andyic.litcomp.WikitextProcessor < "$IN_FIFO" > "$OUT_FIFO" &
+java -cp dist/LitComp*jar org.andyic.litcomp.index.Indexer "$LITCOMP_HOME/test/wiki_index" ProgramFragment < "$INDEXER_IN_FIFO" > /dev/null &
 
 /usr/bin/env node src/ssjs/server.js \
 		--res-dir="$LITCOMP_HOME/res" \
 		--wiki-dir="$LITCOMP_HOME/test/wiki" \
 		--wiki-src-out="$IN_FIFO" \
-		--wiki-html-in="$OUT_FIFO"
+		--wiki-html-in="$OUT_FIFO" \
+		--indexer-out="$INDEXER_IN_FIFO"

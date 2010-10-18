@@ -1,0 +1,58 @@
+<h2>Current Development Objective</h2>
+
+<em>Enable execution of source blocks</em>
+
+<h2>Architecture</h2>
+
+<p>Litcomp is a web application served by a single computer or cluster of computers running the Litcomp daemon. The litcomp daemon uses a multi-process architecture consisting of the following processes:</p>
+
+<ul>
+  <li><em>bin/litcompd</em> creates processes which communicate via UNIX pipes and domain sockets.</li>
+  <li><em>src/ssjs/server.js</em> is an HTTP daemon run by <a href="http://nodejs.org/">node.js</a> which responds to <a href="http://en.wikipedia.org/wiki/Http">HTTP</a> and <a href="http://en.wikipedia.org/wiki/Websockets">WebSockets</a> requests. This process is also responsible for reading/writing wikitext from the wikitext data store.</li>
+  <li><em>src/org/andyic/litcomp/WikitextProcessor.java</em> reads wikitext from stdin and writes browser-ready content to stdout.</li>
+  <li><em>src/org/andyic/litcomp/index/Indexer.java</em> reads wikitext from stdin and writes index key/value pairs to the index data store.</li>
+</ul>
+
+<h2>Indexing</h2>
+
+<p>The wiki data domain (wiki pages) may contain diverse, sparse semantic information. Embedded program fragments, for example, represent executable code and may reference a dependency chain spread across the wiki data domain. Retrieval of this embedded data by means of a graph traversal over the full data domain would be inefficient. Indexing of wiki pages enables efficient semantic wiki queries.</p>
+
+<p>In cases where the wiki is running on a cluster, the index can be shared across nodes. This can be achieved by means of a distributed filesystem. No consistency assumptions are made. In cases where wiki functions depend on a consistent index of the full wiki, index keys must include a version number. This ensures that the wiki user will get no result rather than an incorrect result in cases where the index has not yet become consistent.</p>
+
+<h3>Building the Index</h3>
+
+<p>Each running Litcomp daemon contains at least one indexer subprocess. For each edit request that the daemon fulfills, the full title and content of the document is written to the local indexer process. The indexer is responsible for writing new index information to the index key/value store as necessary.</p>
+
+<p>
+  Java classes which define various functions from the wiki domain into index domain are defined in
+</p>
+
+<pre>
+org.andyic.litcomp.index.
+</pre>
+
+<h4>org.andyic.litcomp.index.Indexer</h4>
+
+<p><em>Indexer</em> is the entry point referenced when spawning new indexer processes.</p>
+
+<h4>org.andyic.litcomp.index.IndexDataStore</h4>
+
+<p><em>IndexDataStore</em> is an interface which defines how index key/value pairs are persisted.</p>
+
+<h2>Program Fragments</h2>
+
+<p>A program fragment must be identified uniquely in order to be executed by the server. Program fragments are identified uniquely using a combination of fragment index and page hash. Including page hash as a component of the identifier ensures that the index of the program fragment will not have changed in the time between when the page was sent to the client and when the server was asked to run the fragment.</p>
+
+<h4>org.andyic.litcomp.index.ProgramFragmentIndexer</h4>
+
+<p><em>ProgramFragmentIndexer</em> maps the wiki data domain into a domain of bare program fragments. Program fragments are keyed by wiki page title, section title, and fragment language. An example program fragment index key is <em>Litcomp/Example_Program_Fragment.perl</em>. The value of this example key would be the raw program source.</p>
+
+<h3>Example Program Fragment</h3>
+
+<p>The following block of code is an example program fragment embedded in a wiki page.</p>
+
+<pre class="source" data-lang="perl">
+#require `Wiki: Another_Page#Some_Section`
+
+print "Hello World!"
+</pre>

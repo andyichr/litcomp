@@ -19,5 +19,5 @@
 
 <h2>Contributing</h2>
 
-<p>LitComp is community-driven free software. As such, contributions from users around the world are vital to the success of the project. If you're interested in contributing to the project, a great place to start is the <a href="Collaboration">Collaboration</a> page.</p>
+<p>Litcomp is community-driven free software. As such, contributions from users around the world are vital to the success of the project. If you're interested in contributing to the project, a great place to start is the <a href="Litcomp">Litcomp</a> (was <a href="Collaboration">Collaboration</a>) page.</p>
 

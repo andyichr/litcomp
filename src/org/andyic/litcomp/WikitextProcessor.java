@@ -14,75 +14,22 @@ public class WikitextProcessor {
 	@SuppressWarnings("unchecked")
 	public static void main(String[] args) {
 
-		int wikitextLength;
-		String pageTitle;
-		int bufLen = 4096;
-		byte[] lenBuf = new byte[bufLen];
-		int lenBufIdx = 0;
-		byte[] titleBuf = new byte[bufLen];
-		int titleBufIdx = 0;
-
-		try {
-			int b;
-
-			while (true) {
-				lenBufIdx = 0;
-				titleBufIdx = 0;
-
-				while ((b = System.in.read()) != 0x0a) {
-
-					if (b == -1) {
-						System.err.println("Input ended");
-						return;
-					}
-
-					lenBuf[lenBufIdx] = (byte)b;
-					lenBufIdx++;
-				}
-
-				wikitextLength = Integer.parseInt(new String(lenBuf, 0, lenBufIdx, "UTF-8"));
-
+		(new WikitextStream() {
+			public String filter(String title, String wikitext, Document doc) {
 				// init meta
 				JSONObject meta = new JSONObject();
-				String title = "";
 				// default to hash of empty string in order to handle new page case
 				String hash = "da39a3ee5e6b4b0d3255bfef95601890afd80709";
-
-				while ((b = System.in.read()) != 0x0a) {
-
-					if (b == -1) {
-						System.err.println("Input ended");
-						return;
-					}
-
-					titleBuf[titleBufIdx] = (byte)b;
-					titleBufIdx++;
-				}
-
-				title = new String(titleBuf, 0, titleBufIdx, "UTF-8");
-
-				byte[] wikitextBuf = new byte[wikitextLength];
-
-				for (int i = 0; i < wikitextLength; i++) {
-					b = System.in.read();
-
-					if (b == -1) {
-						System.err.println("Input ended");
-						return;
-					}
-
-					wikitextBuf[i] = (byte)b;
-				}
-				
-				String wikitext = new String(wikitextBuf,0,wikitextLength,"UTF-8");
 				Vector<Integer> runIndexes = new Vector<Integer>();
-				String output = wikitextToXhtml(wikitext, runIndexes);
-				byte[] outBytes = output.getBytes("UTF-8");
+				StringBuilder outStringBuilder = new StringBuilder();
+				String xhtml = wikitextToXhtml(doc, runIndexes);
+				outStringBuilder.append(xhtml);
 
 				// calculate hash of page
 				try {
+					byte[] hashBytes = xhtml.getBytes("UTF-8");
 					MessageDigest digest = MessageDigest.getInstance("SHA-1");
-					digest.update(outBytes);
+					digest.update(hashBytes);
 					byte[] digestBytes = digest.digest();
 
 					for (int i = 0; i < digestBytes.length; i++) {
@@ -95,6 +42,8 @@ public class WikitextProcessor {
 						hash += hex;
 					}
 
+				} catch (UnsupportedEncodingException  e) {
+					System.err.println("Error while calculating page hash: " + e.toString());
 				} catch (NoSuchAlgorithmException e) {
 					System.err.println("Error while calculating page hash: " + e.toString());
 				}
@@ -103,26 +52,18 @@ public class WikitextProcessor {
 				meta.put("title", title);
 				meta.put("hash", hash);
 				meta.put("runIndexes", runIndexes);
-				StringBuilder pageMetaStringBuilder = new StringBuilder();
-				pageMetaStringBuilder.append("<script>");
-				pageMetaStringBuilder.append("var pageMeta = ");
-				pageMetaStringBuilder.append(meta.toString());
-				pageMetaStringBuilder.append(";");
-				pageMetaStringBuilder.append("</script>");
-				String pageMeta = pageMetaStringBuilder.toString();
-				
-				// write output
-				byte[] pageMetaBytes = pageMeta.getBytes("UTF-8");
-				System.out.println(outBytes.length + pageMetaBytes.length);
-				System.out.write(outBytes);
-				System.out.write(pageMetaBytes);
+				outStringBuilder.append("<script>");
+				outStringBuilder.append("var pageMeta = ");
+				outStringBuilder.append(meta.toString());
+				outStringBuilder.append(";");
+				outStringBuilder.append("</script>");
+
+				return outStringBuilder.toString();
 			}
-		} catch (IOException e) {
-			System.err.println(e.toString());
-		}
+		}).read(System.in, System.out);
 	}
 
-	protected static String wikitextToXhtml(final String inputHTML, final Vector<Integer> runIndexes) throws IOException {
+	protected static String wikitextToXhtml(final Document doc, final Vector<Integer> runIndexes) {
 
 		// parse input with JSOUP
 		class Walker {
@@ -137,13 +78,10 @@ public class WikitextProcessor {
 				String tagName = el.tagName().toLowerCase();
 
 				if (tagName.matches("h[1-6]")) {
-					System.err.println("HEADER");
-					System.err.println(el.toString());
 					runIndex++;
 				} else if (tagName.equals("pre")) {
 					String className = el.attr("class");
 					if (className.equals("source")) {
-						System.err.println("INDEX: " + runIndex);
 						runIndexes.add(new Integer(runIndex));
 					}
 				}
@@ -156,7 +94,6 @@ public class WikitextProcessor {
 			}
 		}
 
-		Document doc = Jsoup.parseBodyFragment(inputHTML);
 		(new Walker(0)).walk(doc.body());
 
 		// serialize DOM to XHTML and write to os
