@@ -7,7 +7,6 @@ import java.util.*;
 import org.jsoup.*;
 import org.jsoup.nodes.*;
 import org.jsoup.select.*;
-import java.security.*;
 import org.json.simple.*;
 
 public class WikitextProcessor {
@@ -25,26 +24,9 @@ public class WikitextProcessor {
 				String xhtml = wikitextToXhtml(doc, runIndexes);
 				outStringBuilder.append(xhtml);
 
-				// calculate hash of page
 				try {
-					byte[] hashBytes = xhtml.getBytes("UTF-8");
-					MessageDigest digest = MessageDigest.getInstance("SHA-1");
-					digest.update(hashBytes);
-					byte[] digestBytes = digest.digest();
-
-					for (int i = 0; i < digestBytes.length; i++) {
-						String hex = Integer.toHexString(0xFF & digestBytes[i]);
-
-						if (hex.length() == 1) {
-							hash += "0";
-						}
-
-						hash += hex;
-					}
-
-				} catch (UnsupportedEncodingException  e) {
-					System.err.println("Error while calculating page hash: " + e.toString());
-				} catch (NoSuchAlgorithmException e) {
+					hash = new StringHash(wikitext).hash();
+				} catch (Exception  e) {
 					System.err.println("Error while calculating page hash: " + e.toString());
 				}
 

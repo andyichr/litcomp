@@ -7,5 +7,5 @@ import org.jsoup.nodes.*;
  * generic indexer interface
  */
 public interface TypeIndexer {
-	public void index(String title, Document doc);
+	public void index(String title, String wikitext, Document doc);
 }

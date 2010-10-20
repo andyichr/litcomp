@@ -11,6 +11,7 @@
 
 var http = require("http");
 var url = require("url");
+var querystring = require("querystring");
 var fs = require("fs");
 var WikitextProcessor = require("./WikitextProcessor").WikitextProcessor;
 var Indexer = require("./Indexer").Indexer;
@@ -282,10 +283,12 @@ var INDEXER_OUT = argv["indexer-out"];
 
 				return function(req, res) {
 					var reqUrl = url.parse(req.url)
-					var reqPath = reqUrl.pathname;
+					var reqPath = querystring.unescape(reqUrl.pathname);
 					var title = pathToPageTitle(reqPath);
 					var wikiFile = title + ".wiki";
 					var wpOut = null;
+
+					console.log("Transformed title: '" + title + "'");
 
 					readFile(WIKI_DIR + "/" + wikiFile, function() { return wpOut }, {
 						"readable": function(fileStats) {

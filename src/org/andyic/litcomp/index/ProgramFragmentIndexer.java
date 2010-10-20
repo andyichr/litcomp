@@ -13,7 +13,7 @@ public class ProgramFragmentIndexer implements TypeIndexer {
 		this.dataStore = dataStore;
 	}
 
-	public void index(final String title, Document doc) {
+	public void index(final String title, String wikitext, Document doc) {
 
 		// parse input with JSOUP
 		class Walker {
@@ -34,12 +34,15 @@ public class ProgramFragmentIndexer implements TypeIndexer {
 					String langName = el.attr("data-lang");
 
 					if (className.equals("source")) {
-						String key = title + "/" + secNameFilter(secName);
-						String value = el.text();
+						String key = "ProgramFragment" + "/" + title + "/" + secNameFilter(secName);
+						StringBuilder valueBuilder = new StringBuilder();
 
 						if (langName.length() > 0) {
-							key += "." + langName;
+							valueBuilder.append("#!/usr/bin/env " + langName + "\n");
 						}
+
+						valueBuilder.append(el.text());
+						String value = valueBuilder.toString();
 
 						dataStore.put(key, value);
 					}
@@ -56,6 +59,7 @@ public class ProgramFragmentIndexer implements TypeIndexer {
 		(new Walker("")).walk(doc.body());
 	}
 
+	//FIXME deduplicate redundant code
 	private String secNameFilter(String secName) {
 		return secName.replaceAll("[^a-zA-Z0-9.-]", "_");
 	}

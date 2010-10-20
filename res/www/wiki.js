@@ -36,9 +36,10 @@ $(function() {
 
 	var $buttonContainer = $("<div/>").attr("id", "buttons");
 	var path = window.location.pathname;
+	var presTitle = pageMeta.title.replace("_", " ");
 
-	$("head").append($("<title/>").text(pageMeta.title));
-	$("body").prepend($("<h1/>").text(pageMeta.title));
+	$("head").append($("<title/>").text(presTitle));
+	$("body").prepend($("<h1/>").text(presTitle));
 
 	// section behavior
 	console.log(pageMeta.runIndexes);

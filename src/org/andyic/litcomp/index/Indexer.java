@@ -27,6 +27,7 @@ public class Indexer {
 		Hashtable<String, TypeIndexer> typeHash = new Hashtable<String, TypeIndexer>();
 		IndexDataStore dataStore = new IndexDataStore(args[0]);
 		typeHash.put("ProgramFragment", new ProgramFragmentIndexer(dataStore));
+		typeHash.put("SectionTitle", new SectionTitleIndexer(dataStore));
 		final TypeIndexer indexer = typeHash.get(args[1]);
 
 		if (indexer == null) {
@@ -36,7 +37,7 @@ public class Indexer {
 
 		(new WikitextStream() {
 			public String filter(String title, String wikitext, Document doc) {
-				indexer.index(title, doc);
+				indexer.index(title, wikitext, doc);
 				return "\"OK\"";
 			}
 		}).read(System.in, System.out);
