@@ -3,5 +3,5 @@
 while IFS="#" read -ra SEC; do
 	PROGRAM_FRAGMENT="$WIKI_INDEX_PATH/ProgramFragment/${SEC[0]}/${SEC[1]}"
 	(stat "$PROGRAM_FRAGMENT" && chmod +x "$PROGRAM_FRAGMENT") >/dev/null 2>&1 || true
-	echo "$PROGRAM_FRAGMENT"
+	"$PROGRAM_FRAGMENT"
 done <<< "$1"

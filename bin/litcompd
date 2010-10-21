@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
 set -e
 
-if [ $# -ne 1 ]; then
-	echo "Usage: litcompd LITCOMP_HOME" 1>&2
+if [ $# -ne 2 ]; then
+	echo "Usage: litcompd LITCOMP_HOME WIKI_DIR" 1>&2
 	exit 1
 fi
 
 LITCOMP_HOME="$1"
+WIKI_DIR="$2"
 
 pushd "$LITCOMP_HOME" >/dev/null
-	export PATH="$LITCOMP_HOME/bin:$PATH"
-	export WIKI_PATH="$LITCOMP_HOME/test/wiki"
-	export WIKI_INDEX_PATH="$LITCOMP_HOME/test/wiki_index"
+	export PATH="$(pwd)/bin:$PATH"
+	export WIKI_PATH="$WIKI_DIR"
+	export WIKI_INDEX_PATH="$WIKI_DIR/index"
 
 	echo "Starting LitComp in: $LITCOMP_HOME"
 
@@ -38,6 +39,7 @@ pushd "$LITCOMP_HOME" >/dev/null
 	/usr/bin/env node src/ssjs/server.js \
 			--res-dir="$LITCOMP_HOME/res" \
 			--wiki-dir="$WIKI_PATH" \
+			--wiki-index-dir="$WIKI_INDEX_PATH" \
 			--wiki-src-out="$IN_FIFO" \
 			--wiki-html-in="$OUT_FIFO" \
 			--indexer-out=>(tee $INDEXER_IN_FIFO > $SECTITLE_INDEXER_IN_FIFO)

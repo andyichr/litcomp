@@ -1,15 +1,17 @@
 html, body {
 	font-family: sans-serif;
+	font-size: 10pt;
 }
 
 a, a:visited {
 	color: #0645AD;
-	text-decoration: underline;
+	text-decoration: none;
 	cursor: pointer;
 }
 
 h1, h2, h3,
 h4, h5, h6 {
+	clear: both;
 	padding-bottom: 2px;
 }
 
@@ -17,31 +19,58 @@ h1, h2 {
 	border-bottom: 1px solid #AAA;
 }
 
+h1 {
+	border-top: none;
+}
+
 textarea {
 	font-family: monospace;
 	font-size: 125%;
 	width: 80em;
-	height: 43em;
+	/*height: 43em;*/
 	border: 1px solid #AAA;
 	padding: 1em;
 }
 
-#buttons {
+.buttons {
 	float: right;
 }
 
 pre {
 	display: inline;
+	white-space: pre-wrap;
 }
 
 .CodeMirror-line-numbers {
 	width: 2.2em;
 	color: #aaa;
-	background-color: #eee;
+	background-color: #AAA;
 	text-align: right;
 	padding-right: .3em;
 	font-size: 10pt;
 	font-family: monospace;
 	padding-top: .4em;
 	overflow: visible;
+}
+
+div.exec {
+	float: right;
+	width: 50%;
+	font-family: monospace;
+	white-space: pre;
+	overflow: auto;
+	border: 1px dashed #2F6FAB;
+	background: #f9f9f9;
+	padding: 1em;
+	max-height: 400px;
+	margin-bottom: 1em;
+}
+
+.stderr {
+	color: red;
+}
+
+div.buttons * {
+	font-size: 10pt;
+	font-weight: normal;
 }

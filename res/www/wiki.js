@@ -11,52 +11,94 @@ var uid = (function() {
 
 $(function() {
 	var run = (function() {
+		var onData = {};
 		var socket = new io.Socket("localhost");
-		console.log("HERE");
-		console.log(socket);
 		socket.on("connect", function() {
-			console.log("connected");
-			socket.send("Hello World!");
+
+			// section behavior
+			$("article").find("h1, h2, h3, h4, h5, h6").each(function(hIndex, hEl) {
+				hIndex++;
+				if ($.inArray(hIndex, pageMeta.runIndexes) != -1) {
+					var $hButtonContainer = $buttonContainer.clone();
+					(function() {
+						var $out;
+						$(hEl).prepend($hButtonContainer.append($("<span>[ <a>Run</a> ]</span>").attr("class","exec-run").click(function() {
+							if ($out) {
+								$out.remove();
+							}
+
+							$out = run(hIndex);
+							$out.fadeIn();
+							$(hEl).after($out);
+						})));
+					}());
+				}
+			});
+
 		});
 		socket.on("message", function(data) {
-			console.log("message: " + data.toString());
+			data = JSON.parse(data);
+			console.log("data: " + data);
+
+			if (onData[data.id]) {
+				console.log("onData exists");
+				console.log(onData[data.id]);
+				onData[data.id](data);
+			} else {
+				console.log("Response for unknown id: '" + data.id + "'");
+			}
 		});
 		socket.on("disconnect", function() {
-			console.log("disconnected");
+			$(".exec-run, .exec").remove();
 		});
 		socket.connect();
 
 		return function(runIndex) {
+			var id = uid();
+			var $out = $("<div/>").attr("class","exec");
+			onData[id] = function(data) {
+				if (data.result.stdout) {
+					$out.append($("<span/>").text(data.result.stdout));
+					$out.each(function() {
+						this.scrollTop = this.scrollHeight;
+					});
+				}
+
+				if (data.result.stderr) {
+					$out.append($("<span/>").attr("class","stderr").text(data.result.stderr));
+					$out.each(function() {
+						this.scrollTop = this.scrollHeight;
+					});
+				}
+
+				if (data.result.exit) {
+					//TODO handle
+				}
+			};
 			socket.send(JSON.stringify({
-				index: runIndex,
-				pageHash: pageMeta.hash
+				id: id,
+				method: "exec",
+				params: {
+					title: pageMeta.title,
+					index: runIndex,
+					pageHash: pageMeta.hash
+				}
 			}));
+			return $out;
 		};
 	}());
 
-	var $buttonContainer = $("<div/>").attr("id", "buttons");
+	var $buttonContainer = $("<div/>").attr("class", "buttons");
 	var path = window.location.pathname;
 	var presTitle = pageMeta.title.replace("_", " ");
 
 	$("head").append($("<title/>").text(presTitle));
 	$("body").prepend($("<h1/>").text(presTitle));
 
-	// section behavior
-	console.log(pageMeta.runIndexes);
-	$("article").find("h1, h2, h3, h4, h5, h6").each(function(hIndex, el) {
-		hIndex++;
-		if ($.inArray(hIndex, pageMeta.runIndexes) != -1) {
-			var $hButtonContainer = $buttonContainer.clone();
-			$(el).prepend($hButtonContainer.append($("<a>Run</a>").click(function() {
-				run(hIndex);
-			})));
-		}
-	});
-
 	// page editing functions
 	(function() {
 		var $titleButtonContainer = $buttonContainer.clone();
-		$("h1").prepend($titleButtonContainer.append($("<a>Edit</a>").click(function() {
+		$("h1").prepend($titleButtonContainer.append($("<span>[ <a>Edit</a> ]</span>").click(function() {
 			$titleButtonContainer.html("");
 			var $loading = loading();
 			$("body > article#wikidoc").remove();
@@ -66,7 +108,10 @@ $(function() {
 			});
 			function showEditor(src) {
 				var editor;
-				$titleButtonContainer.append($("<a>Save</a>").click(function() {
+				var $ct = $("<span/>");
+				$titleButtonContainer.append($ct);
+				$ct.append("[ ");
+				$ct.append($("<a>Save</a>").click(function() {
 					var code = editor.getCode();
 					var $loading = loading();
 					$titleButtonContainer.html("");
@@ -83,10 +128,11 @@ $(function() {
 						}
 					});
 				}));
-				$titleButtonContainer.append(" | ");
-				$titleButtonContainer.append($("<a>Cancel</a>").click(function() {
+				$ct.append(" | ");
+				$ct.append($("<a>Cancel</a>").click(function() {
 					window.location.href = path;
 				}));
+				$ct.append(" ]");
 				var $container = $("<div/>");
 				var $textArea = $("<textarea/>").val(src);
 				$container.append($textArea);
@@ -98,7 +144,7 @@ $(function() {
 						stylesheet: ["/res/cm/css/xmlcolors.css", "/res/cm/css/jscolors.css", "/res/cm/css/csscolors.css"],
 						path: "/res/cm/js/",
 						/*lineNumbers: true,*/
-						height: "dynamic"
+						height: "100%"
 					});
 				});
 			}

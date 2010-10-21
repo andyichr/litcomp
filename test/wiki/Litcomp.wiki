@@ -52,7 +52,5 @@ org.andyic.litcomp.index.
 <p>The following block of code is an example program fragment embedded in a wiki page.</p>
 
 <pre class="source" data-lang="perl">
-#require `Wiki: Another_Page#Some_Section`
-
-print "Hello World!"
+print "Hello World!";
 </pre>

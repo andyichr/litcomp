@@ -4,6 +4,7 @@
  * USAGE: node server.js
  *     --res-dir=[RES DIR]
  *     --wiki-dir=[WIKI DIR]
+ *     --wiki-index-dir=[WIKI INDEX DIR]
  *     --wiki-src-out=[file descriptor to which literal wikitext is written]
  *     --wiki-html-in=[file descriptor from which processed wikitext (HTML) is read]
  *     --indexer-out=[file descriptor to which literal wikitext is written]
@@ -13,6 +14,7 @@ var http = require("http");
 var url = require("url");
 var querystring = require("querystring");
 var fs = require("fs");
+var spawn = require("child_process").spawn;
 var WikitextProcessor = require("./WikitextProcessor").WikitextProcessor;
 var Indexer = require("./Indexer").Indexer;
 var argv = require("../../lib/optimist/optimist")
@@ -22,6 +24,7 @@ var io = require("../../lib/Socket.IO");
 
 var RES_DIR = argv["res-dir"];
 var WIKI_DIR = argv["wiki-dir"];
+var WIKI_INDEX_DIR = argv["wiki-index-dir"];
 var WIKITEXT_OUT = argv["wiki-src-out"];
 var WIKITEXT_IN = argv["wiki-html-in"];
 var INDEXER_OUT = argv["indexer-out"];
@@ -249,7 +252,9 @@ var INDEXER_OUT = argv["indexer-out"];
 						res.end();
 					},
 					"unreadable": function() {
-						notFoundHandler(req, res);
+						// send empty content for new pages
+						res.writeHead(200, {"Content-type": "text/plain; charset=utf-8"});
+						res.end();
 					}
 				});
 			},
@@ -308,7 +313,14 @@ var INDEXER_OUT = argv["indexer-out"];
 							});
 						},
 						"unreadable": function() {
-							notFoundHandler(req, res);
+							// send "blank" wiki page
+							res.writeHead(200, {"Content-type": "text/html; charset=utf-8"});
+							res.write(headerMarkup);
+							//FIXME define default content outside of this file
+							res.write("<p><em>There is nothing here yet. Click &quot;Edit&quot; to define the content of this page.</em></p>");
+							res.write("<script>var pageMeta = {title: \"" + title + "\"};</script>");
+							res.write(footerMarkup);
+							res.end();
 						}
 					});
 				}
@@ -462,10 +474,57 @@ var INDEXER_OUT = argv["indexer-out"];
 	// handle realtime communication
 	var socket = io.listen(server);
 	socket.on("connection", function(client) {
-		console.log("client connected");
+		var reqMethodTable = {
+			exec: function(req) {
+				// resolve section
+				var indexKey = "SectionTitle/" + req.params.title.replace("..","") + "/" + req.params.pageHash.replace("..","") + "/" + parseInt(req.params.index);
+				fs.readFile(WIKI_INDEX_DIR + "/" + indexKey, function(err, sectionTitle) {
+					if (err) {
+						console.log("Error looking up title for section index: " + err);
+						return;
+					}
+
+					var child = spawn("bash", ["-c", "See: " + req.params.title + "#" + sectionTitle], {
+						cwd: WIKI_DIR
+					});
+					child.stdout.on("data", function(data) {
+						var res = {
+							id: req.id,
+							result: {
+								stdout: data.toString()
+							}
+						};
+						client.send(JSON.stringify(res));
+					});
+					child.stderr.on("data", function(data) {
+						var res = {
+							id: req.id,
+							result: {
+								stderr: data.toString()
+							}
+						};
+						client.send(JSON.stringify(res));
+					});
+					child.on("exit", function(code) {
+						var res = {
+							id: req.id,
+							result: {
+								exit: true
+							}
+						};
+						client.send(JSON.stringify(res));
+					});
+				});
+			}
+		};
 		client.on("message", function(data) {
-			console.log("client message: " + data.toString());
-			//TODO implement
+			data = JSON.parse(data);
+			if (reqMethodTable[data.method]) {
+				console.log("Invoking JSON-RPC method: '" + data.method + "'");
+				reqMethodTable[data.method](data);
+			} else {
+				console.log("Invalid JSON-RPC method: '" + data.method + "'");
+			}
 		});
 		client.on("disconnect", function() {
 			console.log("client disconnected");
