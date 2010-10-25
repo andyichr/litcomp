@@ -13,16 +13,16 @@ public class WikitextProcessor {
 	@SuppressWarnings("unchecked")
 	public static void main(String[] args) {
 
+		System.err.println("WikitextProcessor started");
+
 		(new WikitextStream() {
 			public String filter(String title, String wikitext, Document doc) {
 				// init meta
 				JSONObject meta = new JSONObject();
 				// default to hash of empty string in order to handle new page case
 				String hash = "da39a3ee5e6b4b0d3255bfef95601890afd80709";
-				Vector<Integer> runIndexes = new Vector<Integer>();
 				StringBuilder outStringBuilder = new StringBuilder();
-				String xhtml = wikitextToXhtml(doc, runIndexes);
-				outStringBuilder.append(xhtml);
+				outStringBuilder.append(wikitext);
 
 				try {
 					hash = new StringHash(wikitext).hash();
@@ -33,7 +33,6 @@ public class WikitextProcessor {
 				// build page metadata
 				meta.put("title", title);
 				meta.put("hash", hash);
-				meta.put("runIndexes", runIndexes);
 				outStringBuilder.append("<script>");
 				outStringBuilder.append("var pageMeta = ");
 				outStringBuilder.append(meta.toString());
@@ -43,43 +42,5 @@ public class WikitextProcessor {
 				return outStringBuilder.toString();
 			}
 		}).read(System.in, System.out);
-	}
-
-	protected static String wikitextToXhtml(final Document doc, final Vector<Integer> runIndexes) {
-
-		// parse input with JSOUP
-		class Walker {
-			private int runIndex;
-
-			Walker(int runIndex) {
-				this.runIndex = runIndex;
-			}
-
-			public int walk(Element el) {
-				Elements children = el.children();
-				String tagName = el.tagName().toLowerCase();
-
-				if (tagName.matches("h[1-6]")) {
-					runIndex++;
-				} else if (tagName.equals("pre")) {
-					String className = el.attr("class");
-					if (className.equals("source")) {
-						runIndexes.add(new Integer(runIndex));
-					}
-				}
-
-				for (Element child : children) {
-					runIndex = (new Walker(runIndex)).walk(child);
-				}
-
-				return runIndex;
-			}
-		}
-
-		(new Walker(0)).walk(doc.body());
-
-		// serialize DOM to XHTML and write to os
-		Element body = doc.body();
-		return body.html();
 	}
 }

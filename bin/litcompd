@@ -12,7 +12,7 @@ WIKI_DIR="$2"
 pushd "$LITCOMP_HOME" >/dev/null
 	export PATH="$(pwd)/bin:$PATH"
 	export WIKI_PATH="$WIKI_DIR"
-	export WIKI_INDEX_PATH="$WIKI_DIR/index"
+	export WIKI_INDEX_PATH="$WIKI_DIR/.index"
 
 	echo "Starting LitComp in: $LITCOMP_HOME"
 
@@ -21,18 +21,24 @@ pushd "$LITCOMP_HOME" >/dev/null
 	OUT_FIFO="$LITCOMP_HOME"/tmp/wp.out
 	INDEXER_IN_FIFO="$LITCOMP_HOME"/tmp/indexer.in
 	SECTITLE_INDEXER_IN_FIFO="$LITCOMP_HOME"/tmp/indexer.SectionTitle.in
+	INDEX_RPC_IN_FIFO="$LITCOMP_HOME"/tmp/index.rpc.in
+	INDEX_RPC_OUT_FIFO="$LITCOMP_HOME"/tmp/index.rpc.out
 	rm -rf "$IN_FIFO"
 	rm -rf "$OUT_FIFO"
 	rm -rf "$INDEXER_IN_FIFO"
 	rm -rf "$SECTITLE_INDEXER_IN_FIFO"
+	rm -rf "$INDEX_RPC_IN_FIFO"
+	rm -rf "$INDEX_RPC_OUT_FIFO"
 	mkfifo "$IN_FIFO"
 	mkfifo "$OUT_FIFO"
 	mkfifo "$INDEXER_IN_FIFO"
 	mkfifo "$SECTITLE_INDEXER_IN_FIFO"
+	mkfifo "$INDEX_RPC_IN_FIFO"
+	mkfifo "$INDEX_RPC_OUT_FIFO"
 
 	# start wikitext processor as coprocess
-	mkdir -p "$LITCOMP_HOME/test/wiki_index" 2>/dev/null || true
 	java -cp dist/LitComp*jar org.andyic.litcomp.WikitextProcessor < "$IN_FIFO" > "$OUT_FIFO" &
+	java -cp dist/LitComp*jar org.andyic.litcomp.IndexRPC "$WIKI_INDEX_PATH" < "$INDEX_RPC_IN_FIFO" > "$INDEX_RPC_OUT_FIFO" &
 	java -cp dist/LitComp*jar org.andyic.litcomp.index.Indexer "$WIKI_INDEX_PATH" ProgramFragment < "$INDEXER_IN_FIFO" > /dev/null &
 	java -cp dist/LitComp*jar org.andyic.litcomp.index.Indexer "$WIKI_INDEX_PATH" SectionTitle < "$SECTITLE_INDEXER_IN_FIFO" > /dev/null &
 
@@ -42,5 +48,7 @@ pushd "$LITCOMP_HOME" >/dev/null
 			--wiki-index-dir="$WIKI_INDEX_PATH" \
 			--wiki-src-out="$IN_FIFO" \
 			--wiki-html-in="$OUT_FIFO" \
-			--indexer-out=>(tee $INDEXER_IN_FIFO > $SECTITLE_INDEXER_IN_FIFO)
+			--indexer-out=>(tee $INDEXER_IN_FIFO > $SECTITLE_INDEXER_IN_FIFO) \
+			--index-rpc-out="$INDEX_RPC_IN_FIFO" \
+			--index-rpc-in="$INDEX_RPC_OUT_FIFO"
 popd

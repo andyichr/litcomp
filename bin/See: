@@ -2,6 +2,6 @@
 
 while IFS="#" read -ra SEC; do
 	PROGRAM_FRAGMENT="$WIKI_INDEX_PATH/ProgramFragment/${SEC[0]}/${SEC[1]}"
-	(stat "$PROGRAM_FRAGMENT" && chmod +x "$PROGRAM_FRAGMENT") >/dev/null 2>&1 || true
-	"$PROGRAM_FRAGMENT"
+	PROGRAM_FRAGMENT_LANG="$(cat "$WIKI_INDEX_PATH/ProgramFragmentLang/${SEC[0]}/${SEC[1]}")"
+	exec "$PROGRAM_FRAGMENT_LANG" "$PROGRAM_FRAGMENT" "$@"
 done <<< "$1"

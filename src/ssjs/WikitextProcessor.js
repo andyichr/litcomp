@@ -2,7 +2,7 @@
  * defines an object which encapsulates communication with an external
  * wikitext processor
  *
- * the protocol by which this class will communicate with wikitext processors is as follows:
+ * the protocol by which this class communicates with wikitext processors is as follows:
  * writing a document: SIZE\nTITLE\nDOCUMENT
  * reading a document: SIZE\nDOCUMENT
  *

@@ -8,6 +8,8 @@
  *     --wiki-src-out=[file descriptor to which literal wikitext is written]
  *     --wiki-html-in=[file descriptor from which processed wikitext (HTML) is read]
  *     --indexer-out=[file descriptor to which literal wikitext is written]
+ *     --index-rpc-out=[file descriptor to which index RPC requests are written]
+ *     --index-rpc-in=[file descriptor from which index RPC responses are read]
  */
 
 var http = require("http");
@@ -17,8 +19,9 @@ var fs = require("fs");
 var spawn = require("child_process").spawn;
 var WikitextProcessor = require("./WikitextProcessor").WikitextProcessor;
 var Indexer = require("./Indexer").Indexer;
+var StreamRPC = require("./StreamRPC").StreamRPC;
 var argv = require("../../lib/optimist/optimist")
-		.demand(["res-dir", "wiki-dir", "wiki-src-out", "wiki-html-in", "indexer-out"])
+		.demand(["res-dir", "wiki-dir", "wiki-src-out", "wiki-html-in", "indexer-out", "index-rpc-out", "index-rpc-in"])
 		.argv;
 var io = require("../../lib/Socket.IO");
 
@@ -27,6 +30,8 @@ var WIKI_DIR = argv["wiki-dir"];
 var WIKI_INDEX_DIR = argv["wiki-index-dir"];
 var WIKITEXT_OUT = argv["wiki-src-out"];
 var WIKITEXT_IN = argv["wiki-html-in"];
+var INDEX_RPC_OUT = argv["index-rpc-out"];
+var INDEX_RPC_IN = argv["index-rpc-in"];
 var INDEXER_OUT = argv["indexer-out"];
 
 (function() {
@@ -36,6 +41,14 @@ var INDEXER_OUT = argv["indexer-out"];
 	var wp = new WikitextProcessor(
 			fs.createWriteStream(WIKITEXT_OUT),
 			fs.createReadStream(WIKITEXT_IN, {
+				"flags": "r",
+				"encoding": null,
+				"mode": 0666,
+				"bufferSize": 1}));
+	
+	var indexRPC = new StreamRPC(
+			fs.createWriteStream(INDEX_RPC_OUT),
+			fs.createReadStream(INDEX_RPC_IN, {
 				"flags": "r",
 				"encoding": null,
 				"mode": 0666,
@@ -473,10 +486,31 @@ var INDEXER_OUT = argv["indexer-out"];
 
 	// handle realtime communication
 	var socket = io.listen(server);
+	//FIXME create unique client ID per connection and combine this with client request id
 	socket.on("connection", function(client) {
 		var reqMethodTable = {
+			/**
+			 * serve contents of an index key
+			 */
+			index: function(req) {
+				// interface index data store
+				req.method = "get";
+				indexRPC.invoke(req, function(res) {
+					client.send(JSON.stringify({
+						id: req.id,
+						result: {
+								runIndexes: JSON.parse(res.result.value)
+							}
+					}));
+				});
+			},
+
+			/**
+			 * execute a program fragment
+			 */
 			exec: function(req) {
 				// resolve section
+				//FIXME use index data store rather than interfacing index directly
 				var indexKey = "SectionTitle/" + req.params.title.replace("..","") + "/" + req.params.pageHash.replace("..","") + "/" + parseInt(req.params.index);
 				fs.readFile(WIKI_INDEX_DIR + "/" + indexKey, function(err, sectionTitle) {
 					if (err) {

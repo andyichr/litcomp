@@ -45,8 +45,6 @@ abstract public class WikitextStream {
 
 				// init meta
 				String title = "";
-				// default to hash of empty string in order to handle new page case
-				String hash = "da39a3ee5e6b4b0d3255bfef95601890afd80709";
 
 				while ((b = is.read()) != 0x0a) {
 

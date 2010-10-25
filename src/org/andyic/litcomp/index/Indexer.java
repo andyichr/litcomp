@@ -24,6 +24,8 @@ public class Indexer {
 			return;
 		}
 
+		System.err.println("Indexer started: '" + args[1] + "'");
+
 		Hashtable<String, TypeIndexer> typeHash = new Hashtable<String, TypeIndexer>();
 		IndexDataStore dataStore = new IndexDataStore(args[0]);
 		typeHash.put("ProgramFragment", new ProgramFragmentIndexer(dataStore));

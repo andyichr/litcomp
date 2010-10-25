@@ -15,7 +15,7 @@ h4, h5, h6 {
 	padding-bottom: 2px;
 }
 
-h1, h2 {
+h1, h2, h3 {
 	border-bottom: 1px solid #AAA;
 }
 
@@ -41,6 +41,13 @@ pre {
 	white-space: pre-wrap;
 }
 
+div.source {
+	background-color: #DDD;
+	border-radius: 1em;
+	/*border: 1px dashed #2F6FAB;*/
+	padding: 1em;
+}
+
 .CodeMirror-line-numbers {
 	width: 2.2em;
 	color: #aaa;
@@ -57,10 +64,13 @@ div.exec {
 	float: right;
 	width: 50%;
 	font-family: monospace;
-	white-space: pre;
+	white-space: pre-wrap;
 	overflow: auto;
-	border: 1px dashed #2F6FAB;
-	background: #f9f9f9;
+	border-radius: 1em;
+	/*border: 2px solid rgba(163,176,191,.25);*/
+	/*background-color: #CEF2E0;*/
+	background-color: rgba(206,223,242,1);
+	margin-left: 1em;
 	padding: 1em;
 	max-height: 400px;
 	margin-bottom: 1em;
