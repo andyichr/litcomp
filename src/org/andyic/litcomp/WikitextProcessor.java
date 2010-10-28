@@ -22,6 +22,7 @@ public class WikitextProcessor {
 				// default to hash of empty string in order to handle new page case
 				String hash = "da39a3ee5e6b4b0d3255bfef95601890afd80709";
 				StringBuilder outStringBuilder = new StringBuilder();
+				outStringBuilder.append("<div id=\"article_src\">");
 				outStringBuilder.append(wikitext);
 
 				try {
@@ -33,6 +34,7 @@ public class WikitextProcessor {
 				// build page metadata
 				meta.put("title", title);
 				meta.put("hash", hash);
+				outStringBuilder.append("</div>");
 				outStringBuilder.append("<script>");
 				outStringBuilder.append("var pageMeta = ");
 				outStringBuilder.append(meta.toString());

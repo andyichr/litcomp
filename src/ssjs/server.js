@@ -499,7 +499,7 @@ var INDEXER_OUT = argv["indexer-out"];
 					client.send(JSON.stringify({
 						id: req.id,
 						result: {
-								runIndexes: JSON.parse(res.result.value)
+								value: res.result.value
 							}
 					}));
 				});

@@ -7,30 +7,33 @@ var uid = (function() {
 	return function() {
 		return curId++;
 	};
-}())
+}());
 
 $(function() {
 	var run = (function() {
 		var onData = {};
 		var socket = new io.Socket("localhost");
 		socket.on("connect", function() {
+
 			RPC({
 				method: "index",
 				params: {
 					key: "ProgramFragmentRunIndexes/" + pageMeta.title + "/" + pageMeta.hash
 				},
 				onData: function(data) {
-					var runIndexes = data.result.runIndexes;
+					var runIndexes = JSON.parse(data.result.value);
 
 					// section behavior
 					$("article").find("h1, h2, h3, h4, h5, h6").each(function(hIndex, hEl) {
 						hIndex++;
+						var $runLink = $("<a>Run</a>");
+						var $runLinkContainer = $("<span/>");
 						if ($.inArray(hIndex, runIndexes) != -1) {
 							// section is runnable; define run controls
 							var $hButtonContainer = $buttonContainer.clone();
 							(function() {
 								var $out;
-								$(hEl).prepend($hButtonContainer.append($("<span><a>Run</a></span>").attr("class","exec-run").click(function() {
+								$(hEl).prepend($hButtonContainer.append($runLinkContainer.append($runLink.attr("class","exec-run").click(function() {
 									if ($out) {
 										$out.remove();
 									}
@@ -38,7 +41,7 @@ $(function() {
 									$out = run(hIndex);
 									$out.fadeIn();
 									$(hEl).after($out);
-								})));
+								}))));
 							}());
 						}
 					});
@@ -73,7 +76,9 @@ $(function() {
 		};
 
 		return function(runIndex) {
+			var $container = $("<div/>").attr("class","exec-container");
 			var $out = $("<div/>").attr("class","exec");
+			$container.append($out);
 			RPC({
 				method: "exec",
 				params: {
@@ -101,7 +106,7 @@ $(function() {
 					}
 				}
 			});
-			return $out;
+			return $container;
 		};
 	}());
 
@@ -111,17 +116,7 @@ $(function() {
 
 	$("head").append($("<title/>").text(presTitle));
 	$("body").prepend($("<h1/>").text(presTitle));
-
-	// apply source UI
-	$("pre.source").wrap("<div class=\"source\"/>").each(function() {
-		var thisProgramFragment = this;
-		$(this).click(function() {
-			thisProgramFragment.contentEditable = true;
-		});
-		$(this).blur(function() {
-			thisProgramFragment.contentEditable = false;
-		});
-	});
+	$("pre.source").wrap("<div class=\"source\"/>");
 
 	// page editing functions
 	(function() {
@@ -171,31 +166,10 @@ $(function() {
 						stylesheet: ["/res/cm/css/xmlcolors.css", "/res/cm/css/jscolors.css", "/res/cm/css/csscolors.css"],
 						path: "/res/cm/js/",
 						/*lineNumbers: true,*/
-						height: "100%"
+						height: "dynamic"
 					});
 				});
 			}
 		})));
 	}());
-
-	// inline source editing
-	//$("pre[lang]").each(function() {
-	//	// turn "this" into inline editor
-	//	//$(this).addClass("bespin");
-	//	$textarea = $("<textarea/>")
-	//			.val($(this).text());
-	//	$(this).replaceWith($textarea);
-	//	$textarea.each(function() {
-	//		CodeMirror.fromTextArea(this, {
-	//			parserfile: "parsejavascript.js",
-	//			path: "/res/cm/js/",
-	//			lineNumbers: true,
-	//			height: "dynamic",
-	//			stylesheet: "css/jscolors.css",
-	//			tabMode: "shift",
-	//			enterMode: "keep",
-	//			electricChars: false
-	//		});
-	//	});
-	//});
 });

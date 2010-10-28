@@ -3,5 +3,6 @@
 while IFS="#" read -ra SEC; do
 	PROGRAM_FRAGMENT="$WIKI_INDEX_PATH/ProgramFragment/${SEC[0]}/${SEC[1]}"
 	PROGRAM_FRAGMENT_LANG="$(cat "$WIKI_INDEX_PATH/ProgramFragmentLang/${SEC[0]}/${SEC[1]}")"
+	shift
 	exec "$PROGRAM_FRAGMENT_LANG" "$PROGRAM_FRAGMENT" "$@"
 done <<< "$1"
