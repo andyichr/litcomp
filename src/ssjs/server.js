@@ -237,7 +237,12 @@ var INDEXER_OUT = argv["indexer-out"];
 				// read entire resource from disk
 				readFile(RES_DIR + "/www/" + reqPath.substring(5), function() { return res }, {
 					"readable": function() {
-						res.writeHead(200, {"Content-type": mimeType});
+						var expires = new Date();
+						expires.setTime(expires.getTime()+1000*60*60*24);
+						res.writeHead(200, {
+							"Content-type": mimeType,
+							"Expires": expires.toGMTString()
+						});
 					},
 					"success": function() {
 						res.end();

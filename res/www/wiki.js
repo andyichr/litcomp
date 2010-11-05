@@ -1,3 +1,127 @@
+/**
+ * @see http://javascript.crockford.com/remedial.html
+ */
+if (!String.prototype.entityify) {
+    String.prototype.entityify = function () {
+        return this.replace(/&/g, "&amp;").replace(/</g,
+            "&lt;").replace(/>/g, "&gt;");
+    };
+}
+
+/**
+ * pretty-prints a DOM node
+ *
+ * @param el the DOM node
+ */
+function prettyPrint(el, indent, first) {
+	if (isNaN(indent)) {
+		indent = 0;
+	}
+
+	var spaces = new Array(indent*5).join(" ");
+	var html = [];
+
+	if (el.nodeName.match(/H[1-6]/)) {
+		var text = $("<div/>").append($(el).clone()).html();
+
+		var trailSpaces = "\n";
+
+		if (indent == 0) {
+			trailSpaces = "\n\n";
+		}
+
+		return [spaces, text, trailSpaces].join("");
+	}
+
+	if (el.nodeName.match(/(STRONG|EM|A)/)) {
+		var trailSpaces = "";
+		var text = $("<div/>").append($(el).clone()).html();
+
+		if (text.match(/\s$/)) {
+			trailSpaces = "\n";
+		}
+
+		if (!first) {
+			spaces = "";
+		}
+
+		return [spaces, text, trailSpaces].join("");
+	}
+
+	if (el.nodeName == "PRE") {
+
+		var trailSpaces = "\n";
+
+		if (indent == 0) {
+			trailSpaces = "\n\n";
+		}
+
+		return [spaces, $("<div/>").append($(el).clone().prepend("\n")).html(), trailSpaces].join("");
+	}
+
+	if (el.nodeName == "#text") {
+		if (el.nodeValue.match(/^\s+$/m)) {
+			// skip if just whitespace
+			return "";
+		}
+
+		var text = el.nodeValue;
+
+		if (first) {
+			text = text.replace(/^\s*/m,"");
+		}
+
+		if (!first && !text.match(/^\s/)) {
+			spaces = "";
+		}
+
+		return [spaces, text.entityify()].join("");
+	}
+
+	html.push(spaces);
+	html.push("<");
+	html.push(el.nodeName.toLowerCase());
+
+	for (var i = 0; i < el.attributes.length; i++) {
+		html.push(" " + el.attributes[i].name + "=\"" + el.attributes[i].textContent.entityify() + "\"");
+	}
+
+	html.push(">\n");
+
+	var last = "";
+	var lastNonempty = "";
+
+	for (var i = 0; i < el.childNodes.length; i++) {
+		if (last == "") {
+			childFirst = true;
+		} else {
+			childFirst = false;
+		}
+
+		last = prettyPrint(el.childNodes[i], indent+1, childFirst);
+		html.push(last);
+
+		if (last != "") {
+			lastNonempty = last;
+		}
+	}
+
+	if (!lastNonempty.match(/\n$/)) {
+		html.push("\n");
+	}
+
+	html.push(spaces);
+	html.push("</");
+	html.push(el.nodeName.toLowerCase());
+	html.push(">\n");
+
+	if (indent == 0) {
+		html.push("\n");
+	}
+
+	return html.join("");
+}
+
 (function() {
 	var path = window.location.pathname;
 	var $buttonContainer = $("<div/>").attr("class", "buttons");
@@ -14,9 +138,65 @@
 	}());
 
 	/**
-	 * defines behaviors which are toggleable
+	 * defines behaviors which are toggleable & orthogonal
 	 */
 	var screenBehavior = {
+		/**
+		 * enable structured navigation in sections
+		 */
+		sectionNavigation: {
+			enable: function() {
+				$("article").find("h1, h2, h3, h4, h5, h6").each(function(hIndex, hEl) {
+					var $hButtonContainer = $buttonContainer.clone();
+					$(hEl).prepend($hButtonContainer);
+					$(hEl).bind("nav-data", function(e, argv) {
+						var $runLink = $("<a/>").text(argv.name).click(function() {
+							argv.invoke();
+						});
+
+						// insert in order
+						var $runLinkContainer = $("<span/>").append($runLink).data("priority", argv.priority || 0);
+						var aAfterEl = null;
+						var navEmpty = true;
+						$hButtonContainer.find("> span").each(function(aIndex, aEl) {
+							navEmpty = false;
+							if ($(aEl).data("priority") < (argv.priority || 0)) {
+								aAfterEl = aEl;
+							}
+						});
+
+						var $sep = $("<span> | </span>");
+
+						if (aAfterEl) {
+							$(aAfterEl).after($sep).after($runLinkContainer);
+						} else {
+							if (!navEmpty) {
+								$hButtonContainer.prepend($sep);
+							}
+
+							$hButtonContainer.prepend($runLinkContainer);
+						}
+
+						// make controls available to sender
+						if (argv.success) {
+							argv.success({
+								remove: function() {
+									$sep.remove();
+									$runLinkContainer.remove();
+								}
+							});
+						}
+					});
+				});
+			},
+
+			disable: function() {
+				$("article").find("h1, h2, h3, h4, h5, h6").each(function(hIndex, hEl) {
+					$(hEl).unbind("nav-data");
+				});
+			}
+		},
+
 		/**
 		 * define behaviors which will define page elements in order to inform
 		 * the user about the current state of the app connection
@@ -73,12 +253,14 @@
 		/**
 		 * defines behavior for editing sections of the page
 		 */
-		edit: {
-			enable: function() {
+		edit: (function() {
 
-				(function() {
-					var $titleButtonContainer = $buttonContainer.clone();
+			var $titleButtonContainer = $buttonContainer.clone();
 
+			return {
+				enable: function() {
+
+					$titleButtonContainer.remove().html("");
 					$("h1").prepend($titleButtonContainer.append($("<span><a>Edit</a></span>").click(function() {
 
 						$titleButtonContainer.html("");
@@ -142,61 +324,102 @@
 						}
 
 					})));
-				}());
-			},
-			disable: function() {
-			}
-		},
+				},
+				disable: function() {
+					$titleButtonContainer.remove().html("");
+				}
+			};
+		}()),
+
+		sectionEdit: (function() {
+			var navControls = [];
+			return {
+				enable: function() {
+					$("article").find("h1, h2, h3, h4, h5, h6").each(function(hIndex, hEl) {
+						$(hEl).trigger("nav-data", {
+							name: "Edit",
+							priority: 1,
+							invoke: function() {
+								sectionEdit(hIndex);
+							},
+							success: function(newNavControl) {
+								navControls.push(newNavControl);
+							}
+						});
+					});
+				},
+				disable: function() {
+					$(navControls).each(function (i, thisNavControl) {
+						thisNavControl.remove();
+					});
+					navControls = [];
+				}
+			};
+		}()),
 		
 		/**
 		 * defines behavior for program fragment execution
 		 */
-		run: {
-			enable: function() {
+		run: (function() {
+				var navControls = [];
+				return {
+					enable: function() {
 
-				// runnable program fragments
-				RPC({
-					method: "index",
-					params: {
-						key: "ProgramFragmentRunIndexes/" + pageMeta.title + "/" + pageMeta.hash
-					},
-					onData: function(data) {
-						var runIndexes = JSON.parse(data.result.value);
+						// runnable program fragments
+						RPC({
+							method: "index",
+							params: {
+								key: "ProgramFragmentRunIndexes/" + pageMeta.title + "/" + pageMeta.hash
+							},
+							onData: function(data) {
+								var runIndexes = JSON.parse(data.result.value);
 
-						// section behavior
-						$("article").find("h1, h2, h3, h4, h5, h6").each(function(hIndex, hEl) {
-							hIndex++;
-							var $runLink = $("<a>Run</a>");
-							var $runLinkContainer = $("<span/>");
-							if ($.inArray(hIndex, runIndexes) != -1) {
-								// section is runnable; define run controls
-								var $hButtonContainer = $buttonContainer.clone();
-								(function() {
-									var $out;
-									$(hEl).prepend($hButtonContainer.append($runLinkContainer.append($runLink.attr("class","exec-run").click(function() {
-										if ($out) {
-											$out.remove();
-										}
+								// section behavior
+								$("article").find("h1, h2, h3, h4, h5, h6").each(function(hIndex, hEl) {
+									hIndex++;
 
-										$out = run(hIndex);
-										$out.fadeIn();
-										$(hEl).after($out);
-									}))));
-								}());
+									if ($.inArray(hIndex, runIndexes) != -1) {
+										var $out;
+										var $runLink = $("<a>Run</a>");
+										var $runLinkContainer = $("<span/>");
+
+										// section is runnable; define run controls
+										$(hEl).trigger("nav-data", {
+											name: "Run",
+											invoke: function() {
+												if ($out) {
+													$out.remove();
+												}
+
+												$out = run(hIndex);
+												$out.fadeIn();
+												$(hEl).after($out);
+											},
+											success: function(newNavControl) {
+												navControls.push(newNavControl);
+											}
+										});
+									}
+								});
+
 							}
 						});
-
+					},
+					disable: function() {
+						$(".exec-run, .exec-container").remove();
+						$(navControls).each(function (i, thisNavControl) {
+							thisNavControl.remove();
+						});
+						navControls = [];
 					}
-				});
-			},
-			disable: function() {
-			}
-		}
+			};
+		}())
 	};
 
 	// defined once connection code is loaded
 	var reconnect = function() {};
 	var run = function() {};
+	var sectionEdit = function() {};
 	var RPC = function() {};
 
 	$(function() {
@@ -206,8 +429,12 @@
 			onSocketConnect = function() {
 				console.log("connected");
 				screenBehavior.connected.enable();
+				screenBehavior.edit.disable();
 				screenBehavior.edit.enable();
+				screenBehavior.run.disable();
 				screenBehavior.run.enable();
+				screenBehavior.sectionEdit.disable();
+				screenBehavior.sectionEdit.enable();
 			};
 
 			onSocketMessage = function(data) {
@@ -224,11 +451,9 @@
 			onSocketDisconnect = function() {
 				screenBehavior.connected.disable();
 				screenBehavior.edit.disable();
+				screenBehavior.sectionEdit.disable();
 				screenBehavior.run.disable();
-				$(".exec-run, .exec-container, div.buttons").remove();
 			};
-			screenBehavior.edit.disable();
-			screenBehavior.run.disable();
 
 			// define & invoke reconnect behavior
 			var socketSend = function() {};
@@ -277,6 +502,108 @@
 				}));
 			};
 
+			/** 
+			 * sectionEdit creates an editor widget which edits a subsection of the document keyed on header index
+			 *
+			 * @param int hIndex
+			 */
+			sectionEdit = (function() {
+
+				var $originalArticle = $("#article_src").clone();
+				var $headers = $originalArticle.find("h1, h2, h3, h4, h5, h6");
+
+				return function(hIndex) {
+
+					$h = $($headers.get(hIndex));
+					var hLevel = $h.get(0).nodeName.substring(1);
+					var untilSelector = [];
+
+					for (var i = hLevel; i > 0; i--) {
+						untilSelector.push("h" + i);
+					}
+
+					untilSelector = untilSelector.join(", ");
+
+					var $selection = $($h).add($h.nextUntil(untilSelector));
+					var $editSelection = $selection.clone();
+
+					var src = [];
+
+					$editSelection.each(function(i, el) {
+						src.push(prettyPrint(el));
+					});
+
+					src = src.join("");
+
+					$("div.buttons").hide();
+					var $titleButtonContainer = $buttonContainer.clone();
+					$("h1").prepend($titleButtonContainer);
+					var editor;
+					var $ct = $("<span/>");
+					$titleButtonContainer.append($ct);
+
+					// define save behavior
+					$ct.append($("<a>Save</a>").click(function() {
+						var src = editor.getCode();
+						var $loading = loading();
+						$titleButtonContainer.html("");
+						$container.replaceWith($loading);
+						$h.before($(src));
+						$selection.remove();
+						src = []
+						var childNodes = $originalArticle.get(0).childNodes;
+
+						for (var i = 0; i < childNodes.length; i++) {
+							src.push(prettyPrint(childNodes[i]));
+						}
+
+						src = src.join("");
+
+						$.ajax({
+							type: "PUT",
+							data: src,
+							url: path,
+							success: function() {
+								window.location.href = path;
+							},
+							error: function() {
+								window.location.href = path;
+							}
+						});
+					}));
+
+					$ct.append(" | ");
+
+					// define cancel behavior
+					$ct.append($("<a>Cancel</a>").click(function() {
+						window.location.href = path;
+					}));
+
+					$ct.append("");
+
+					var $container = $("<div/>");
+
+					// define text editor widget
+					var $textArea = $("<textarea/>").val(src);
+					$container.append($textArea);
+					$("body > article#wikidoc").replaceWith($container);
+					$textArea.focus();
+					$textArea.each(function() {
+						editor = CodeMirror.fromTextArea(this, {
+							parserfile: ["parsexml.js", "parsecss.js", "tokenizejavascript.js", "parsejavascript.js", "parsehtmlmixed.js"],
+							stylesheet: ["/res/cm/css/xmlcolors.css", "/res/cm/css/jscolors.css", "/res/cm/css/csscolors.css"],
+							path: "/res/cm/js/",
+							/*lineNumbers: true,*/
+							height: "dynamic"
+						});
+					});
+
+				};
+			}());
+
+			/**
+			 * run invokes server-side execution of a program fragment
+			 */
 			run = function(runIndex) {
 				var $container = $("<div/>").attr("class","exec-container");
 				var $out = $("<div/>").attr("class","exec");
@@ -311,6 +638,7 @@
 				return $container;
 			};
 
+			screenBehavior.sectionNavigation.enable();
 			reconnect();
 		}());
 
