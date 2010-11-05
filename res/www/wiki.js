@@ -18,7 +18,12 @@ function prettyPrint(el, indent, first) {
 		indent = 0;
 	}
 
-	var spaces = new Array(indent*5).join(" ");
+	var spaces = "";
+
+	for (var i = 0; i < 2 * indent; i++) {
+		spaces += " ";
+	}
+
 	var html = [];
 
 	if (el.nodeName.match(/H[1-6]/)) {
@@ -60,7 +65,7 @@ function prettyPrint(el, indent, first) {
 	}
 
 	if (el.nodeName == "#text") {
-		if (el.nodeValue.match(/^\s+$/m)) {
+		if (el.nodeValue.match(/^\s+$/)) {
 			// skip if just whitespace
 			return "";
 		}
@@ -68,7 +73,8 @@ function prettyPrint(el, indent, first) {
 		var text = el.nodeValue;
 
 		if (first) {
-			text = text.replace(/^\s*/m,"");
+			var text = $.trim(text) + "\n";
+			//text = text.replace(/^\s*/m,"");
 		}
 
 		if (!first && !text.match(/^\s/)) {
