@@ -128,6 +128,9 @@ function prettyPrint(el, indent, first) {
 	return html.join("");
 }
 
+/**
+ * app-specific main routine
+ */
 (function() {
 	var path = window.location.pathname;
 	var $buttonContainer = $("<div/>").attr("class", "buttons");
@@ -431,9 +434,28 @@ function prettyPrint(el, indent, first) {
 	$(function() {
 		(function() {
 			var onData = {};
+			var addAnchors = function() {
+				addAnchors = function() {};
+				// add heading anchors & section title data
+				$("h2, h3, h4, h5, h6").each(function(hIndex, hEl) {
+					console.log(hIndex);
+					RPC({
+						method: "index",
+						params: {
+							key: "SectionTitle/" + pageMeta.title + "/" + pageMeta.hash + "/" + (hIndex+1)
+						},
+						onData: function(data) {
+							$(hEl).data("section_id", data.result.value);
+							$(hEl).before($("<a/>").attr("name", data.result.value));
+							console.log(data);
+						}
+					});
+				});
+			};
 
 			onSocketConnect = function() {
 				console.log("connected");
+				addAnchors();
 				screenBehavior.connected.enable();
 				screenBehavior.edit.disable();
 				screenBehavior.edit.enable();
@@ -652,6 +674,10 @@ function prettyPrint(el, indent, first) {
 
 		$("head").append($("<title/>").text(presTitle));
 		$("body").prepend($("<h1/>").text(presTitle));
-		$("pre.source").wrap("<div class=\"source\"/>");
+
+		// enhance source blocks
+		$("pre.source").wrap("<div class=\"source\"/>").each(function(i, sourceEl) {
+			$(sourceEl).html($(sourceEl).html().replace(/(See: ([a-zA-Z0-9_]+#[a-zA-Z0-9_]+))/g, "<a href=\"$2\">$1</a>"));
+		});
 	});
 }());
