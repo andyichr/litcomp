@@ -282,6 +282,16 @@ function prettyPrint(el, indent, first) {
 						});
 
 						function showEditor(src) {
+							window.location.hash = "#Edit";
+
+							$(window).bind("hashchange", function() {
+								if (window.location.hash == "#Edit") {
+									return;
+								}
+
+								window.location.reload();
+							});
+
 							var editor;
 							var $ct = $("<span/>");
 							$titleButtonContainer.append($ct);
@@ -438,7 +448,6 @@ function prettyPrint(el, indent, first) {
 				addAnchors = function() {};
 				// add heading anchors & section title data
 				$("h2, h3, h4, h5, h6").each(function(hIndex, hEl) {
-					console.log(hIndex);
 					RPC({
 						method: "index",
 						params: {
@@ -447,7 +456,12 @@ function prettyPrint(el, indent, first) {
 						onData: function(data) {
 							$(hEl).data("section_id", data.result.value);
 							$(hEl).before($("<a/>").attr("name", data.result.value));
-							console.log(data);
+
+							// enable activation of anchor from page load
+							if (window.location.hash == "#" + data.result.value) {
+								window.location.hash = "";
+								window.location.hash = "#" + data.result.value;
+							}
 						}
 					});
 				});
@@ -541,6 +555,16 @@ function prettyPrint(el, indent, first) {
 				var $headers = $originalArticle.find("h1, h2, h3, h4, h5, h6");
 
 				return function(hIndex) {
+
+					window.location.hash = "#Edit";
+
+					$(window).bind("hashchange", function() {
+						if (window.location.hash == "#Edit") {
+							return;
+						}
+
+						window.location.reload();
+					});
 
 					$h = $($headers.get(hIndex));
 					var hLevel = $h.get(0).nodeName.substring(1);
