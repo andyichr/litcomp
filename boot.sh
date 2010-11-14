@@ -8,5 +8,5 @@ cat <<EOF > "$MENU/Open Wiki/run.sh"
 bootprog os_open "http://localhost:8070"
 EOF
 
-bootprog status_update "Wiki Running Normally"
-java -jar dist/LitComp*jar test/wiki
+bootprog status_update "App Running Normally"
+./bin/litcompd . ./test/wiki
