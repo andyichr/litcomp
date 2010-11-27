@@ -524,7 +524,7 @@ var INDEXER_OUT = argv["indexer-out"];
 					}
 
 					var child = spawn("bash", ["-c", "See: " + req.params.title + "#" + sectionTitle], {
-						cwd: WIKI_DIR
+						cwd: WIKI_DIR + "/.cache"
 					});
 					child.stdout.on("data", function(data) {
 						var res = {

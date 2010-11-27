@@ -13,9 +13,12 @@ pushd "$LITCOMP_HOME" >/dev/null
 	export PATH="$(pwd)/bin:$PATH"
 	export WIKI_PATH="$WIKI_DIR"
 	export WIKI_INDEX_PATH="$WIKI_DIR/.index"
+	export WIKI_CACHE_PATH="$WIKI_DIR/.cache"
 
 	echo "Starting LitComp in: $LITCOMP_HOME"
 
+
+	mkdir "$WIKI_CACHE_PATH" 2>/dev/null || true
 	mkdir "$LITCOMP_HOME"/tmp 2>/dev/null || true
 	IN_FIFO="$LITCOMP_HOME"/tmp/wp.in
 	OUT_FIFO="$LITCOMP_HOME"/tmp/wp.out

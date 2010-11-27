@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
-while IFS="#" read -ra SEC; do
-	PROGRAM_FRAGMENT="$WIKI_INDEX_PATH/ProgramFragment/${SEC[0]}/${SEC[1]}"
-	PROGRAM_FRAGMENT_LANG="$(cat "$WIKI_INDEX_PATH/ProgramFragmentLang/${SEC[0]}/${SEC[1]}")"
-	shift
-	exec "$PROGRAM_FRAGMENT_LANG" "$PROGRAM_FRAGMENT" "$@"
-done <<< "$1"
+PROGRAM_FRAGMENT_SRC=$(echo $1 | sed -e 's/#/\//');
+PROGRAM_FRAGMENT="$WIKI_INDEX_PATH/ProgramFragment/$PROGRAM_FRAGMENT_SRC"
+PROGRAM_FRAGMENT_LANG="$(cat "$WIKI_INDEX_PATH/ProgramFragmentLang/$PROGRAM_FRAGMENT_SRC")"
+shift
+exec "$PROGRAM_FRAGMENT_LANG" "$PROGRAM_FRAGMENT" "$@"
