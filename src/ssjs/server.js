@@ -490,7 +490,9 @@ var INDEXER_OUT = argv["indexer-out"];
 	server.listen(8070, "127.0.0.1");
 
 	// handle realtime communication
-	var socket = io.listen(server);
+	var socket = io.listen(server, {
+		transports: ['flashsocket', 'htmlfile', 'xhr-multipart', 'xhr-polling']
+	});
 	//FIXME create unique client ID per connection and combine this with client request id
 	socket.on("connection", function(client) {
 		var reqMethodTable = {

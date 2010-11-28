@@ -131,7 +131,7 @@ function prettyPrint(el, indent, first) {
 /**
  * app-specific main routine
  */
-(function() {
+$(window).load(function() {
 	var path = window.location.pathname;
 	var $buttonContainer = $("<div/>").attr("class", "buttons");
 
@@ -277,7 +277,12 @@ function prettyPrint(el, indent, first) {
 						var $loading = loading();
 						$("body > article#wikidoc").remove();
 						$("body").append($loading);
-						$.get("/literal" + path, function(data) {
+						literalPath = path.split("/");
+						file = literalPath.pop();
+						literalPath.push("literal");
+						literalPath.push(file);
+						literalPath = literalPath.join("/");
+						$.get(literalPath, function(data) {
 							showEditor(data);
 						});
 
@@ -334,8 +339,8 @@ function prettyPrint(el, indent, first) {
 							$textArea.each(function() {
 								editor = CodeMirror.fromTextArea(this, {
 									parserfile: ["parsexml.js", "parsecss.js", "tokenizejavascript.js", "parsejavascript.js", "parsehtmlmixed.js"],
-									stylesheet: ["/res/cm/css/xmlcolors.css", "/res/cm/css/jscolors.css", "/res/cm/css/csscolors.css"],
-									path: "/res/cm/js/",
+									stylesheet: ["./res/cm/css/xmlcolors.css", "./res/cm/css/jscolors.css", "./res/cm/css/csscolors.css"],
+									path: "./res/cm/js/",
 									/*lineNumbers: true,*/
 									height: "dynamic"
 								});
@@ -501,11 +506,17 @@ function prettyPrint(el, indent, first) {
 			var socketSend = function() {};
 
 			reconnect = (function() {
+				//console.log("sockets temporarily disabled");
+				//return; //FIXME remove!!!!
 				var socket;
 
 				return function() {
 					console.log("begin connecting");
-					socket = new io.Socket("localhost");
+					socket = new io.Socket("gps.caltech.edu", {
+						resource: "~andyc/proxy/index.php/socket.io",
+						transports: ['flashsocket', 'htmlfile', 'xhr-multipart', 'xhr-polling']
+					});
+						//transports: ['flashsocket', 'htmlfile', 'xhr-multipart', 'xhr-polling']
 					(function() {
 						var thisSocket = socket;
 						socket.on("connect", function() {
@@ -643,8 +654,8 @@ function prettyPrint(el, indent, first) {
 					$textArea.each(function() {
 						editor = CodeMirror.fromTextArea(this, {
 							parserfile: ["parsexml.js", "parsecss.js", "tokenizejavascript.js", "parsejavascript.js", "parsehtmlmixed.js"],
-							stylesheet: ["/res/cm/css/xmlcolors.css", "/res/cm/css/jscolors.css", "/res/cm/css/csscolors.css"],
-							path: "/res/cm/js/",
+							stylesheet: ["./res/cm/css/xmlcolors.css", "./res/cm/css/jscolors.css", "./res/cm/css/csscolors.css"],
+							path: "./res/cm/js/",
 							/*lineNumbers: true,*/
 							height: "dynamic"
 						});
@@ -691,7 +702,13 @@ function prettyPrint(el, indent, first) {
 			};
 
 			screenBehavior.sectionNavigation.enable();
-			reconnect();
+			var timeout = 0;
+			if ($.browser.safari) {
+				timeout = 500;
+			}
+			setTimeout(function() {
+				reconnect();
+			}, timeout);
 		}());
 
 		var presTitle = pageMeta.title.replace("_", " ");
@@ -704,4 +721,4 @@ function prettyPrint(el, indent, first) {
 			$(sourceEl).html($(sourceEl).html().replace(/(See: ([a-zA-Z0-9_]+#[a-zA-Z0-9_]+))/g, "<a href=\"$2\">$1</a>"));
 		});
 	});
-}());
+});
