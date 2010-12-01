@@ -512,8 +512,11 @@ $(window).load(function() {
 
 				return function() {
 					console.log("begin connecting");
-					socket = new io.Socket("gps.caltech.edu", {
-						resource: "~andyc/proxy/index.php/socket.io",
+					var path =  window.location.pathname.replace(/[^\/]*$/,"");
+					socket = new io.Socket(window.location.hostname, {
+						resource: (path == "/")
+								? "socket.io"
+								: (path + "socket.io"),
 						transports: ['flashsocket', 'htmlfile', 'xhr-multipart', 'xhr-polling']
 					});
 						//transports: ['flashsocket', 'htmlfile', 'xhr-multipart', 'xhr-polling']
