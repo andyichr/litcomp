@@ -1,34 +1,20 @@
-Pach for WikiModel
+Synopsis
+--------------------------------------------------------------------------------
+Litcomp is a wiki daemon. Litcomp is designed to be an executable
+application wiki, inspired by D.E. Knuth's Literate Programming.
+Litcomp source code can be obtained by cloning the public git
+repository via the following command:
 
-This patch for WikiModel allows <source> elements (consistent with Wikipedia).
+git clone http://gps.caltech.edu/~andyc/litcomp.pub.git
 
-@@ -69,6 +69,7 @@
-     | <#VERBATIM_BLOCK: ( 
-          "<nowiki>" ( ~["<"] | "<" ~["/"] | "</" ~["n"] | "</n" ~["o"] | "</no" ~["w"] | "</now" ~["i"] | "</nowi" ~["k"] | "</nowik" ~["i"] | "</nowiki" ~[">"] )* "</nowiki>"  
-        | ("<pre>"|"<pre style=\""(<ALPHA>|<DIGIT>|<SPACE>|["#","."])+"\">") ( ~["<"] | "<" ~["/"] | "</" ~["p"] | "</p" ~["r"] | "</pr" ~["e"] | "</pre" ~[">"])*"</pre>"
-+       | ("<source>"|"<source lang=\""(<ALPHA>|<DIGIT>|<SPACE>|["#","."])+"\">") ( ~["<"] | "<" ~["/"] | "</" ~["s"] | "</s" ~["o"] | "</so" ~["u"] | "</sou" ~["r"] | "</sour" ~["c"] | "</sourc" ~["e"] | "</source" ~[">"])*"</source>"
-        )>
-     | <#VERBATIM_INLINE: (
-           "<math>" ( "\\" ~[] | ~[] )* "</math>"
-@@ -498,7 +499,7 @@
-         int len = 0;
-         int end = 0;
-         WikiParameters params = null;
--        if ("nowiki".equalsIgnoreCase(tag)|| "pre".equalsIgnoreCase(tag)) {
-+        if ("nowiki".equalsIgnoreCase(tag)|| "pre".equalsIgnoreCase(tag)|| "source".equalsIgnoreCase(tag)) {
-           len = tag.length()+2;
-           end = len;
-           str = str.substring(len, str.length() - end - 1);
-@@ -509,6 +510,12 @@
-           params=new WikiParameters(str.substring("<pre".length(),len-1));
-           str = str.substring(len, str.length() - end - 1);
-           fContext.onVerbatim(str, false,params);
-+        }else if (str.startsWith("<source")) {
-+          len = str.indexOf('>')+1;
-+          end = "<source>".length();
-+          params=new WikiParameters(str.substring("<source".length(),len-1));
-+          str = str.substring(len, str.length() - end - 1);
-+          fContext.onVerbatim(str, false,params);
-         }
-     }
- }
+
+Compile-time Dependencies
+--------------------------------------------------------------------------------
+* ghc (http://www.haskell.org/ghc/)
+* json (http://hackage.haskell.org/package/json)
+* HXT (http://hackage.haskell.org/package/hxt)
+
+Runtime Dependencies
+--------------------------------------------------------------------------------
+* node.js (http://nodejs.org/)
+* bash (http://www.gnu.org/software/bash/)

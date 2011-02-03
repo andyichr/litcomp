@@ -1,0 +1,27 @@
+<h3>List Changes</h3>
+
+<pre class="source" data-lang="bash">
+git status
+</pre>
+
+<h4>Diff</h4>
+
+<pre class="source" data-lang="bash">
+git diff
+</pre>
+
+<h3>Remotes</h3>
+
+<pre class="source" data-lang="bash">
+git remote -v
+</pre>
+
+<h4>Pull</h4>
+
+<p>
+  If changes were made remotely, run git pull to merge them to the local working copy.
+</p>
+
+<pre class="source" data-lang="bash">
+git pull
+</pre>

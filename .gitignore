@@ -2,3 +2,6 @@
 build
 dist
 test/wiki_index
+*.hi
+*.o
+src/hs/arrow/WikitextDocument/StringTuple/SectionTitle

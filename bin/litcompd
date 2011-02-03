@@ -6,6 +6,19 @@ if [ $# -ne 2 ]; then
 	exit 1
 fi
 
+# validate environment
+echo "Validating environment..."
+
+for BIN in java rabbitmq-server node; do
+	which $BIN >/dev/null || {
+		echo "requires $BIN in PATH" 1>&2;
+		exit 1;
+	}
+done
+
+echo "Environment OK"
+
+# define global constants
 LITCOMP_HOME="$1"
 WIKI_DIR="$2"
 
@@ -17,21 +30,26 @@ pushd "$LITCOMP_HOME" >/dev/null
 
 	echo "Starting LitComp in: $LITCOMP_HOME"
 
-
 	mkdir "$WIKI_CACHE_PATH" 2>/dev/null || true
-	mkdir "$LITCOMP_HOME"/tmp 2>/dev/null || true
-	IN_FIFO="$LITCOMP_HOME"/tmp/wp.in
-	OUT_FIFO="$LITCOMP_HOME"/tmp/wp.out
-	INDEXER_IN_FIFO="$LITCOMP_HOME"/tmp/indexer.in
-	SECTITLE_INDEXER_IN_FIFO="$LITCOMP_HOME"/tmp/indexer.SectionTitle.in
-	INDEX_RPC_IN_FIFO="$LITCOMP_HOME"/tmp/index.rpc.in
-	INDEX_RPC_OUT_FIFO="$LITCOMP_HOME"/tmp/index.rpc.out
+	mkdir "$LITCOMP_HOME"/.tmp 2>/dev/null || true
+
+	# prepare IO pipes
+	IN_FIFO="$LITCOMP_HOME"/.tmp/wp.in
+	OUT_FIFO="$LITCOMP_HOME"/.tmp/wp.out
+	INDEXER_IN_FIFO="$LITCOMP_HOME"/.tmp/indexer.in
+	SECTITLE_INDEXER_IN_FIFO="$LITCOMP_HOME"/.tmp/indexer.SectionTitle.in
+	INDEX_RPC_IN_FIFO="$LITCOMP_HOME"/.tmp/index.rpc.in
+	INDEX_RPC_OUT_FIFO="$LITCOMP_HOME"/.tmp/index.rpc.out
+
+	# clear old pipe files
 	rm -rf "$IN_FIFO"
 	rm -rf "$OUT_FIFO"
 	rm -rf "$INDEXER_IN_FIFO"
 	rm -rf "$SECTITLE_INDEXER_IN_FIFO"
 	rm -rf "$INDEX_RPC_IN_FIFO"
 	rm -rf "$INDEX_RPC_OUT_FIFO"
+
+	# make new fifo files
 	mkfifo "$IN_FIFO"
 	mkfifo "$OUT_FIFO"
 	mkfifo "$INDEXER_IN_FIFO"
@@ -39,12 +57,17 @@ pushd "$LITCOMP_HOME" >/dev/null
 	mkfifo "$INDEX_RPC_IN_FIFO"
 	mkfifo "$INDEX_RPC_OUT_FIFO"
 
+	# start message queue
+	export RABBITMQ_NODE_PORT=8071
+	/usr/bin/env rabbitmq-server &
+
 	# start wikitext processor as coprocess
 	java -cp dist/LitComp*jar org.andyic.litcomp.WikitextProcessor < "$IN_FIFO" > "$OUT_FIFO" &
 	java -cp dist/LitComp*jar org.andyic.litcomp.IndexRPC "$WIKI_INDEX_PATH" < "$INDEX_RPC_IN_FIFO" > "$INDEX_RPC_OUT_FIFO" &
 	java -cp dist/LitComp*jar org.andyic.litcomp.index.Indexer "$WIKI_INDEX_PATH" ProgramFragment < "$INDEXER_IN_FIFO" > /dev/null &
 	java -cp dist/LitComp*jar org.andyic.litcomp.index.Indexer "$WIKI_INDEX_PATH" SectionTitle < "$SECTITLE_INDEXER_IN_FIFO" > /dev/null &
 
+	# start web interface
 	/usr/bin/env node src/ssjs/server.js \
 			--res-dir="$LITCOMP_HOME/res" \
 			--wiki-dir="$WIKI_PATH" \

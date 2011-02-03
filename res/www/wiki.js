@@ -506,8 +506,6 @@ $(window).load(function() {
 			var socketSend = function() {};
 
 			reconnect = (function() {
-				//console.log("sockets temporarily disabled");
-				//return; //FIXME remove!!!!
 				var socket;
 
 				return function() {
@@ -516,10 +514,8 @@ $(window).load(function() {
 					socket = new io.Socket(window.location.hostname, {
 						resource: (path == "/")
 								? "socket.io"
-								: (path + "socket.io"),
-						transports: ['flashsocket', 'htmlfile', 'xhr-multipart', 'xhr-polling']
+								: (path + "socket.io")
 					});
-						//transports: ['flashsocket', 'htmlfile', 'xhr-multipart', 'xhr-polling']
 					(function() {
 						var thisSocket = socket;
 						socket.on("connect", function() {

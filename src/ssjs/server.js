@@ -490,9 +490,7 @@ var INDEXER_OUT = argv["indexer-out"];
 	server.listen(8070, "127.0.0.1");
 
 	// handle realtime communication
-	var socket = io.listen(server, {
-		transports: ['flashsocket', 'htmlfile', 'xhr-multipart', 'xhr-polling']
-	});
+	var socket = io.listen(server);
 	//FIXME create unique client ID per connection and combine this with client request id
 	socket.on("connection", function(client) {
 		var reqMethodTable = {
@@ -558,6 +556,7 @@ var INDEXER_OUT = argv["indexer-out"];
 				});
 			}
 		};
+
 		client.on("message", function(data) {
 			data = JSON.parse(data);
 			if (reqMethodTable[data.method]) {
@@ -567,10 +566,12 @@ var INDEXER_OUT = argv["indexer-out"];
 				console.log("Invalid JSON-RPC method: '" + data.method + "'");
 			}
 		});
+
 		client.on("disconnect", function() {
 			console.log("client disconnected");
 			//TODO implement
 		});
+
 	});
 }());
 
