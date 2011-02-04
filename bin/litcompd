@@ -59,7 +59,7 @@ pushd "$LITCOMP_HOME" >/dev/null
 
 	# start message queue
 	export RABBITMQ_NODE_PORT=8071
-	/usr/bin/env rabbitmq-server &
+	#/usr/bin/env rabbitmq-server &
 
 	# start wikitext processor as coprocess
 	java -cp dist/LitComp*jar org.andyic.litcomp.WikitextProcessor < "$IN_FIFO" > "$OUT_FIFO" &
