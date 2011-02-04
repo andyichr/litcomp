@@ -5,7 +5,7 @@ application wiki, inspired by D.E. Knuth's Literate Programming.
 Litcomp source code can be obtained by cloning the public git
 repository via the following command:
 
-git clone http://gps.caltech.edu/~andyc/litcomp.pub.git
+git clone git://github.com/andyichr/litcomp.git
 
 
 Compile-time Dependencies
