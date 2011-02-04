@@ -516,7 +516,7 @@ var INDEXER_OUT = argv[ "indexer-out" ];
 			exec: function( req ) {
 				// resolve section
 				//FIXME use index data store rather than interfacing index directly
-				var indexKey = "SectionTitle/" + req.params.title.replace( "..","" ) + "/" + req.params.pageHash.replace( "..","" ) + "/" + parseInt( req.params.index );
+				var indexKey = "SectionTitle/" + req.params.title.replace( "..", "" ) + "/" + req.params.pageHash.replace( "..", "" ) + "/" + parseInt( req.params.index );
 				fs.readFile( WIKI_INDEX_DIR + "/" + indexKey, function( err, sectionTitle ) {
 					if ( err ) {
 						console.log( "Error looking up title for section index: " + err );
