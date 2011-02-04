@@ -19,6 +19,7 @@ var fs = require( "fs" );
 var spawn = require( "child_process" ).spawn;
 var WikitextProcessor = require( "./WikitextProcessor" ).WikitextProcessor;
 var Indexer = require( "./Indexer" ).Indexer;
+var File = require( "./File" );
 var StreamRPC = require( "./StreamRPC" ).StreamRPC;
 var argv = require( "../../lib/optimist/optimist" )
 		.demand( [ "res-dir", "wiki-dir", "wiki-src-out", "wiki-html-in", "indexer-out", "index-rpc-out", "index-rpc-in" ] )
@@ -124,95 +125,7 @@ var INDEXER_OUT = argv[ "indexer-out" ];
 	};
 
 	// define behavior to be invoked as changes in files occur
-	var updateFile = function() {};
-	var readFile = (function() {
-		var fileCache = {};
-
-		/**
-		 * invalidate the cache of a file
-		 */
-		updateFile = function( fileName ) {
-			fileCache[ fileName ] = null;
-		};
-		
-		/**
-		 * read file @ fileName into writable stream @ os
-		 */
-		return function( fileName, os, cb ) {
-				var cache = fileCache[ fileName ];
-
-				console.log( "Loading file: '" + fileName + "'" );
-
-				if ( cache ) {
-					return cache( os, cb );
-				}
-
-				// cache behavior is not defined yet for this file, therefore definition is necessary
-				console.log( "Reading file from disk: '" + fileName + "'" );
-
-				// ensure file exists & is readable
-				fs.stat( fileName, function( err, stats ) {
-
-					if ( err ) {
-						if ( cb.unreadable ) {
-							console.log( "Unreadable file was requested: '" + fileName + "'" );
-							cb.unreadable();
-						}
-
-						return;
-					}
-
-					var buffer = [];
-					var rs = fs.createReadStream( fileName );
-					rs.on( "data", function( data ) {
-						buffer.push( data )
-					} );
-					rs.on( "error", function() {
-						if ( buffer.length ) {
-							if ( cb.unreadable ) {
-								cb.unreadable();
-							}
-						} else {
-							if ( cb.error ) {
-								cb.error();
-							}
-						}
-					} );
-					rs.on( "end", function() {
-						fileCache[ fileName ] = function( os, cb ) {
-							if ( cb.readable ) {
-								cb.readable( stats );
-							}
-						};
-
-						var lastFn = fileCache[ fileName ];
-
-						for ( var i = 0; i < buffer.length; i++ ) {
-							(function() {
-								var bufferIndex = i;
-								var innerLastFn = lastFn;
-								fileCache[ fileName ] = function( os, cb ) {
-									innerLastFn( os, cb );
-									os().write( buffer[ bufferIndex ] );
-								};
-							}());
-
-							lastFn = fileCache[ fileName ];
-						}
-
-						fileCache[ fileName ] = function( os, cb ) {
-							lastFn( os, cb );
-							
-							if ( cb.success ) {
-								cb.success();
-							}
-						};
-
-						fileCache[ fileName ]( os, cb );
-					} );
-				} );
-		}
-	}());
+	var fileInterface = File.makeFileInterface();
 
 	var dispatchTable = {
 		"GET": {
@@ -235,10 +148,10 @@ var INDEXER_OUT = argv[ "indexer-out" ];
 				}
 
 				// read entire resource from disk
-				readFile( RES_DIR + "/www/" + reqPath.substring( 5 ), function() { return res }, {
+				fileInterface.readFile( RES_DIR + "/www/" + reqPath.substring( 5 ), function() { return res }, {
 					"readable": function() {
 						var expires = new Date();
-						expires.setTime( expires.getTime()+1000*60*60*24 );
+						expires.setTime( expires.getTime() + 1000 * 60 * 60 * 24 );
 						res.writeHead( 200, {
 							"Content-type": mimeType,
 							"Expires": expires.toGMTString()
@@ -262,7 +175,7 @@ var INDEXER_OUT = argv[ "indexer-out" ];
 				var title = pathToPageTitle( reqPath.substring( "literal".length ));
 				var wikiFile = pathToPageTitle( title ) + ".wiki";
 				console.log( "Serving wiki page: " + wikiFile );
-				readFile( WIKI_DIR + "/" + wikiFile, function() { return res }, {
+				fileInterface.readFile( WIKI_DIR + "/" + wikiFile, function() { return res }, {
 					"readable": function() {
 						res.writeHead( 200, { "Content-type": "text/plain; charset=utf-8" } );
 					},
@@ -313,7 +226,7 @@ var INDEXER_OUT = argv[ "indexer-out" ];
 
 					console.log( "Transformed title: '" + title + "'" );
 
-					readFile( WIKI_DIR + "/" + wikiFile, function() { return wpOut }, {
+					fileInterface.readFile( WIKI_DIR + "/" + wikiFile, function() { return wpOut }, {
 						"readable": function( fileStats ) {
 							res.writeHead( 200, { "Content-type": "text/html; charset=utf-8" } );
 							res.write( headerMarkup );
@@ -408,7 +321,7 @@ var INDEXER_OUT = argv[ "indexer-out" ];
 										}
 
 										console.log( "Wrote new contents to wiki file: " + wikiFile );
-										updateFile( wikiFile );
+										fileInterface.updateFile( wikiFile );
 										res.writeHead( 200 );
 										res.end();
 									} );
