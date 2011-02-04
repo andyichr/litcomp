@@ -21,6 +21,7 @@ var WikitextProcessor = require( "./WikitextProcessor" ).WikitextProcessor;
 var Indexer = require( "./Indexer" ).Indexer;
 var File = require( "./File" );
 var UserDispatch = require( "./UserDispatch" );
+var Entropy = require( "./Entropy" );
 var StreamRPC = require( "./StreamRPC" ).StreamRPC;
 var argv = require( "../../lib/optimist/optimist" )
 		.demand( [ "res-dir", "wiki-dir", "wiki-src-out", "wiki-html-in", "indexer-out", "index-rpc-out", "index-rpc-in" ] )
@@ -74,53 +75,10 @@ var INDEXER_OUT = argv[ "indexer-out" ];
 	};
 
 	/**
-	 * @param int set size
-	 * @return array of random integers
-	 */
-	var entropy = (function() {
-		var is = fs.createReadStream( "/dev/random" );
-		var req = [];
-
-		is.on( "data", function( data ) {
-
-			// stop reading when all requests are satisfied
-			if ( !req.length ) {
-				is.pause();
-				return;
-			}
-
-			// dump buffer contents into current request
-			var curReq = req[ req.length - 1 ];
-			var i = 0;
-
-			while ( curReq.set.length < curReq.setSize && i < data.length ) {
-				curReq.set.push( data[ i ] % 10 );
-				i++;
-			}
-
-			// request satisfied
-			if ( curReq.set.length == curReq.setSize ) {
-				curReq.success( curReq.set );
-				req.pop();
-			}
-
-		} );
-
-		return function( setSize, success ) {
-			req.push( {
-				"setSize": setSize,
-				"success": success,
-				"set": []
-			} );
-			is.resume();
-		};
-	}());
-
-	/**
 	 * temporary file name
 	 */
 	var tmpWikiFileName = function( success ) {
-		entropy( 64, function( set ) {
+		Entropy.makeEntropy( 64, function( set ) {
 			success( WIKI_DIR + "/.tmp." + set.join( "" ) );
 		} );
 	};
