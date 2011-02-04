@@ -46,7 +46,7 @@ var INDEXER_OUT = argv[ "indexer-out" ];
 				"flags": "r",
 				"encoding": null,
 				"mode": 0666,
-				"bufferSize": 1} ));
+				"bufferSize": 1} ) );
 	
 	var indexRPC = new StreamRPC(
 			fs.createWriteStream( INDEX_RPC_OUT ),
@@ -54,7 +54,7 @@ var INDEXER_OUT = argv[ "indexer-out" ];
 				"flags": "r",
 				"encoding": null,
 				"mode": 0666,
-				"bufferSize": 1} ));
+				"bufferSize": 1} ) );
 
 	var indexer = new Indexer( fs.createWriteStream( INDEXER_OUT ) );
 
@@ -121,7 +121,7 @@ var INDEXER_OUT = argv[ "indexer-out" ];
 	 */
 	var tmpWikiFileName = function( success ) {
 		entropy( 64, function( set ) {
-			success( WIKI_DIR + "/.tmp." + set.join( "" ));
+			success( WIKI_DIR + "/.tmp." + set.join( "" ) );
 		} );
 	};
 
@@ -216,7 +216,7 @@ var INDEXER_OUT = argv[ "indexer-out" ];
 						result: {
 								value: res.result.value
 							}
-					} ));
+					} ) );
 				} );
 			},
 
@@ -243,7 +243,7 @@ var INDEXER_OUT = argv[ "indexer-out" ];
 								stdout: data.toString()
 							}
 						};
-						client.send( JSON.stringify( res ));
+						client.send( JSON.stringify( res ) );
 					} );
 					child.stderr.on( "data", function( data ) {
 						var res = {
@@ -252,7 +252,7 @@ var INDEXER_OUT = argv[ "indexer-out" ];
 								stderr: data.toString()
 							}
 						};
-						client.send( JSON.stringify( res ));
+						client.send( JSON.stringify( res ) );
 					} );
 					child.on( "exit", function( code ) {
 						var res = {
@@ -261,7 +261,7 @@ var INDEXER_OUT = argv[ "indexer-out" ];
 								exit: true
 							}
 						};
-						client.send( JSON.stringify( res ));
+						client.send( JSON.stringify( res ) );
 					} );
 				} );
 			}
