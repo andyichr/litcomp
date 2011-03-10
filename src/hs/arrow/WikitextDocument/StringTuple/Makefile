@@ -1,2 +1,5 @@
-SectionTitle: SectionTitle.hs
-	ghc --make SectionTitle.hs
+SectionTitle: SectionTitle.o
+	g++ SectionTitle.o -o SectionTitle
+
+SectionTitle.o: SectionTitle.cc SectionTitle.h
+	g++ -c SectionTitle.cc
