@@ -1,5 +1,5 @@
 SectionTitle: SectionTitle.o
-	g++ SectionTitle.o -o SectionTitle
+	g++ $(CXX_FLAGS) SectionTitle.o -o SectionTitle
 
 SectionTitle.o: SectionTitle.cc SectionTitle.h
-	g++ -c SectionTitle.cc
+	g++ $(CXX_FLAGS) -ltinyxml -c SectionTitle.cc
