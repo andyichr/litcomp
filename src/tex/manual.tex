@@ -32,4 +32,41 @@ web content, that literate programs are structured in precisely this
 format, and that there does not yet exist a web-based literate programming
 platform, the need for such a platform is apparent.
 
+\section {Architecture}
+
+litcomp has two essential top-level components: model and interface.
+
+\subsection {Model}
+
+The litcomp model is a category containing objects relevant to
+the motivation of the literate program under operation. In some cases
+the objects of the category are defined explicitly while in other cases
+only morphism and invariants are defined. Generally it is desirable to
+define the program under operation as concisely and clearly as possible.
+
+Whether a given object is explicitly defined or derived by demand is a
+function of its classification. In this context, objects of the category
+are distributed between two mutually-exclusive classes:
+
+\begin{itemize}
+
+\item {\em Essential Objects}: the smallest set of objects and morphisms
+from which it is possible to derive all relevant objects
+
+\item {\em Derivative Objects}: objects not classified as essential
+
+\end{itemize}
+
+Essential objects are always defined explicitly in a persistent data
+store whereas derivative objects are generally only defined temporarily
+in volatile storage.
+
+\subsection {Interface}
+
+The primary user interface to the litcomp platform is a web
+application. Specifically, this application consists of a HTTP-compliant
+web server defined in JavaScript and a set of HTML documents and
+client-side JavaScript programs. Server-side JavaScript programs are
+evaluated by node.js.
+
 \end{document}
