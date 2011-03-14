@@ -1,18 +1,21 @@
-\documentstyle[11pt]{article}
-\setlength{\topmargin}{-.5in}
-\setlength{\textheight}{9in}
-\setlength{\oddsidemargin}{.125in}
-\setlength{\textwidth}{6.25in}
+\documentclass{article}
+\usepackage{graphicx}
 \begin{document}
 \title{litcomp}
 \author{Andy Christianson}
 \renewcommand{\today}{March 13, 2011}
 \maketitle
 
-This article exhibits the design of and motivation for a literate
-programming platform named {\em litcomp}.
+Design of and motivation for literate programming platform {\em litcomp}.
 
-\section {Synopsis}
+\pagebreak
+
+\setcounter{tocdepth}{1}
+\tableofcontents
+
+\pagebreak
+
+\section {Motivation}
 
 The litcomp platform centers around the concept of defining programs primarly
 in the form of human-friendly literature. Rather than defining programs
@@ -32,9 +35,25 @@ web content, that literate programs are structured in precisely this
 format, and that there does not yet exist a web-based literate programming
 platform, the need for such a platform is apparent.
 
+\pagebreak
+
 \section {Architecture}
 
-litcomp has two essential top-level components: model and interface.
+The litcomp platform has two essential top-level components: model and
+user interface. The model represents all relevant information in the
+system. The interface code facilitates review and redefinition of the
+model as requested by the user.
+
+\subsection {Source Taxonomy}
+
+Platform components are organized into a hierarchy, evident in the
+directory structure of the litcomp source distribution:
+
+\begin{figure}[h!]
+  \caption{Source Taxonomy}
+  \centering
+    \includegraphics[width=1.0\textwidth]{src.ps}
+\end{figure}
 
 \pagebreak
 

@@ -1,4 +1,6 @@
 *.swp
+.build
+docs
 build
 dist
 test/wiki_index

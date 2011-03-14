@@ -1,7 +1,7 @@
 StringTuple:
 	cd src/cc/arrow/WikitextDocument/StringTuple && make
 
-docs:
+docs: ./src/tex/*.tex
 	./src/sh/makedocs.sh
 
 all: StringTuple
