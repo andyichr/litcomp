@@ -10,9 +10,8 @@ git clone git://github.com/andyichr/litcomp.git
 
 Compile-time Dependencies
 --------------------------------------------------------------------------------
-* ghc (http://www.haskell.org/ghc/)
-* json (http://hackage.haskell.org/package/json)
-* HXT (http://hackage.haskell.org/package/hxt)
+* c/c++ compiler
+* latex (for documentation)
 
 Runtime Dependencies
 --------------------------------------------------------------------------------
