@@ -30,5 +30,5 @@ cd .build
 # build manual dvi
 latex "$SRCDIR"/src/tex/manual.tex
 latex "$SRCDIR"/src/tex/manual.tex
-cp manual.dvi "$SRCDIR"/docs/
-cp src.ps "$SRCDIR"/docs/
+dvipdf manual.dvi
+cp manual.pdf "$SRCDIR"/docs/
