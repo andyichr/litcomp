@@ -9,7 +9,7 @@ fi
 # validate environment
 echo "Validating environment..."
 
-for BIN in java rabbitmq-server node; do
+for BIN in java node; do
 	which $BIN >/dev/null || {
 		echo "requires $BIN in PATH" 1>&2;
 		exit 1;
@@ -56,10 +56,6 @@ pushd "$LITCOMP_HOME" >/dev/null
 	mkfifo "$SECTITLE_INDEXER_IN_FIFO"
 	mkfifo "$INDEX_RPC_IN_FIFO"
 	mkfifo "$INDEX_RPC_OUT_FIFO"
-
-	# start message queue
-	export RABBITMQ_NODE_PORT=8071
-	#/usr/bin/env rabbitmq-server &
 
 	# start wikitext processor as coprocess
 	java -cp dist/LitComp*jar org.andyic.litcomp.WikitextProcessor < "$IN_FIFO" > "$OUT_FIFO" &
