@@ -1,7 +1,7 @@
 {
 	"take": {
 		"take": {
-			"this": { "title": "Index", "hash": "12d37f9f294373843a56d27200843cf0f8b4c984" },
+			"this": { "title": "Index", "hash": "48dc7db484d672466507a50502dae01bb85084e8" },
 			"from": "ArticleVersion",
 			"to": "WikitextDocument",
 			"using": "Source"
