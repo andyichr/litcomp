@@ -9,4 +9,7 @@ all: StringTuple
 test: all FORCE
 	./src/test.sh
 
+clean:
+	find . -name "*.o" | xargs rm
+
 FORCE:
