@@ -1,3 +1,4 @@
+<?xml version="1.0" ?>
 <h2>Synopsis</h2>
 
 <p><a href="http://en.wikipedia.org/wiki/Literate_programming">Literate programming</a>, an idea conceived by <a href="http://en.wikipedia.org/wiki/Donald_knuth">D.E. Knuth</a>, proposes a new method of program design. Knuth's idea can be applied in the context of modern-day <a href="http://en.wikipedia.org/wiki/Unix">UNIX</a> systems. The system you are interacting with now is one such application. UNIX systems are typically controlled by means of an interactive shell program, such as sh. System control is essentially the same as any other program, and so the concepts of literate computing can be applied to this domain.</p>
@@ -6,7 +7,7 @@
 
 <h2>How It Works</h2>
 
-<p>Knuth's <a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.126.8364&rep=rep1&type=pdf"><em>Literate Computing</em></a> references two programs, tangle and weave, which generate a runnable program and typeset documentation respectively.</p>
+<p>Knuth's <a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.126.8364&amp;rep=rep1&amp;type=pdf"><em>Literate Computing</em></a> references two programs, tangle and weave, which generate a runnable program and typeset documentation respectively.</p>
 
 <p>Today, dynamic programs are quite common, and static programs can even be generated on-the-fly. Because of this, there is no need to have the separate processes of tangling and weaving. Instead, programs are represented in the well-known paradigm of wiki websites. Program fragments are embedded among the wiki source code, and are referenced according to the nearest preceding header (H1-H6) element. Advantages of this method over Knuth's original tangle and weave programs are numerous:</p>
 
