@@ -1,0 +1,23 @@
+#!/usr/bin/env perl
+
+use JSON;
+
+use strict;
+
+if ( ! -d $ENV{WIKI_DIR} ) {
+	print STDERR "WIKI_DIR environment must be set to valid directory";
+	exit 1;
+}
+
+my @input = <STDIN>;
+my $article_version = from_json( join( "", @input ) );
+
+my $file_name = $ENV{WIKI_DIR} . "/" . $article_version->{title} . ".wiki";
+
+my $sha1 = `sha1sum "$file_name" | sed -e "s/ .*//" | tr -d "\n"`;
+
+if ( $sha1 ne $article_version->{hash} || ! ( -e $file_name ) ) {
+	die( "version not found; hash: \"" . $sha1 . "\"" );
+}
+
+system("cat \"$file_name\"");
