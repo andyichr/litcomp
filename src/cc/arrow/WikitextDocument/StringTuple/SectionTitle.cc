@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <stdio.h>
 #include <tinyxml/tinyxml.h>
 
 #include "SectionTitle.h"
@@ -68,10 +69,19 @@ bool iterate(TiXmlNode* pParent, bool first = true) {
 
 int main(void) {
 	TiXmlDocument doc("/dev/stdin");
+	std::string input_line;
 
-	if (!doc.LoadFile()) {
-		return 1;
+	while (std::cin) {
+		getline(std::cin, input_line);
+		doc.Parse(input_line.c_str());
 	}
+
+
+	//if (!doc.LoadFile()) {
+	//	std::cerr << "XML load failed. Is XML file valid??" << std::endl;
+	//	std::cerr << "TiXmlDocument.ErrorDesc(): " << doc.ErrorDesc() << std::endl;
+	//	return 1;
+	//}
 
 	std::cout << "[";
 	iterate(&doc);
