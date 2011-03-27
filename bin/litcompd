@@ -19,14 +19,20 @@ done
 echo "Environment OK"
 
 # define global constants
-LITCOMP_HOME="$1"
-WIKI_DIR="$2"
+export LITCOMP_HOME="$1"
+export WIKI_DIR="$2"
 
 pushd "$LITCOMP_HOME" >/dev/null
 	export PATH="$(pwd)/bin:$PATH"
 	export WIKI_PATH="$WIKI_DIR"
 	export WIKI_INDEX_PATH="$WIKI_DIR/.index"
 	export WIKI_CACHE_PATH="$WIKI_DIR/.cache"
+
+	export PATH="$(find "$LITCOMP_HOME"/src/* -maxdepth 0 -type d | while read LANG_DIR; do
+		test -d "$LANG_DIR"/arrow && {
+			echo "$LANG_DIR/arrow:" | tr -d "\n";
+		} || true
+	done)$PATH"
 
 	echo "Starting LitComp in: $LITCOMP_HOME"
 
