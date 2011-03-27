@@ -21,6 +21,7 @@ var WikitextProcessor = require( "./WikitextProcessor" ).WikitextProcessor;
 var Indexer = require( "./Indexer" ).Indexer;
 var File = require( "./File" );
 var UserDispatch = require( "./UserDispatch" );
+var ModelRPC = require( "./ModelRPC" );
 var Entropy = require( "./Entropy" );
 var StreamRPC = require( "./StreamRPC" ).StreamRPC;
 var argv = require( "../../lib/optimist/optimist" )
@@ -56,6 +57,9 @@ var INDEXER_OUT = argv[ "indexer-out" ];
 				"encoding": null,
 				"mode": 0666,
 				"bufferSize": 1} ) );
+
+	var modelRPC = ModelRPC.makeModelRPC( {
+	} );
 
 	var indexer = new Indexer( fs.createWriteStream( INDEXER_OUT ) );
 
@@ -162,6 +166,24 @@ var INDEXER_OUT = argv[ "indexer-out" ];
 	//FIXME create unique client ID per connection and combine this with client request id
 	socket.on( "connection", function( client ) {
 		var reqMethodTable = {
+			/**
+			 * realize a value in the model
+			 */
+			take: function( req ) {
+				// interface index data store
+				var rpcReq = {
+					"take": req.params
+				};
+				modelRPC.realize( rpcReq, function( res ) {
+					client.send( JSON.stringify( {
+						id: req.id,
+						result: {
+							value: res.result.value
+						}
+					} ) );
+				} );
+			},
+
 			/**
 			 * serve contents of an index key
 			 */
