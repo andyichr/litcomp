@@ -396,6 +396,7 @@ $(window).load(function() {
 								key: "ProgramFragmentRunIndexes/" + pageMeta.title + "/" + pageMeta.hash
 							},
 							onData: function(data) {
+								return;
 								var runIndexes = JSON.parse(data.result.value);
 
 								// section behavior
@@ -452,23 +453,35 @@ $(window).load(function() {
 			var addAnchors = function() {
 				addAnchors = function() {};
 				// add heading anchors & section title data
-				$("h2, h3, h4, h5, h6").each(function(hIndex, hEl) {
-					RPC({
-						method: "index",
-						params: {
-							key: "SectionTitle/" + pageMeta.title + "/" + pageMeta.hash + "/" + (hIndex+1)
+
+				RPC({
+					method: "take",
+					params: {
+						"take": {
+							"this": {
+								"title": pageMeta.title,
+								"hash": pageMeta.hash
+							},
+							"from": "ArticleVersion",
+							"to": "WikitextDocument",
+							"using": "Source"
 						},
-						onData: function(data) {
-							$(hEl).data("section_id", data.result.value);
-							$(hEl).before($("<a/>").attr("name", data.result.value));
+						"from": "WikitextDocument",
+						"to": "StringTuple",
+						"using": "SectionTitle"
+					},
+					onData: function(data) {
+						$("h2, h3, h4, h5, h6").each(function(hIndex, hEl) {
+							$(hEl).data("section_id", data.result.value[hIndex]);
+							$(hEl).before($("<a/>").attr("name", data.result.value[hIndex]));
 
 							// enable activation of anchor from page load
 							if (window.location.hash == "#" + data.result.value) {
 								window.location.hash = "";
 								window.location.hash = "#" + data.result.value;
 							}
-						}
-					});
+						});
+					}
 				});
 			};
 
