@@ -5,13 +5,21 @@
 
 #include "SectionTitle.h"
 
+bool valid_char(char c) {
+	return ((c >= 65 && c <= 90)
+			|| (c >= 97 && c <= 122)
+			|| (c >= 48 && c <=57)
+			|| (c == '.')
+			|| (c == '-'));
+}
+
 bool print(TiXmlNode* pParent, bool first = true) {
 	TiXmlNode* pChild;
 	const char* nodeValue;
 
 	if (pParent->Type() == TiXmlNode::TINYXML_TEXT) {
 		if (!first) {
-			std::cout << " ";
+			std::cout << "_";
 		}
 
 		nodeValue = pParent->Value();
@@ -19,11 +27,11 @@ bool print(TiXmlNode* pParent, bool first = true) {
 		int len = strlen(nodeValue);
 
 		for (int i = 0; i < len; i++) {
-			if (nodeValue[i] == '"') {
-				std::cout << "\\";
+			if (valid_char(nodeValue[i])) {
+				std::cout << nodeValue[i];
+			} else {
+				std::cout << "_";
 			}
-
-			std::cout << nodeValue[i];
 		}
 
 		first = false;

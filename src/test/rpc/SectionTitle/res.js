@@ -1,1 +1,1 @@
-["Synopsis","How It Works","Contributing"]
+["Synopsis","How_It_Works","Contributing"]
