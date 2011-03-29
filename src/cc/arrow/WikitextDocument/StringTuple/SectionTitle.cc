@@ -5,7 +5,7 @@
 
 #include "SectionTitle.h"
 
-bool valid_char(char c) {
+bool validChar(char c) {
 	return ((c >= 65 && c <= 90)
 			|| (c >= 97 && c <= 122)
 			|| (c >= 48 && c <=57)
@@ -27,7 +27,7 @@ bool print(TiXmlNode* pParent, bool first = true) {
 		int len = strlen(nodeValue);
 
 		for (int i = 0; i < len; i++) {
-			if (valid_char(nodeValue[i])) {
+			if (validChar(nodeValue[i])) {
 				std::cout << nodeValue[i];
 			} else {
 				std::cout << "_";
@@ -53,7 +53,7 @@ bool iterate(TiXmlNode* pParent, bool first = true) {
 		if (pChild->Type() == TiXmlNode::TINYXML_ELEMENT) {
 			const char* nodeName = pChild->Value();
 
-			if (nodeName[0] == 'h' || nodeName[0] == 'H') {
+			if ((nodeName[0] == 'h' || nodeName[0] == 'H') && nodeName[1] >= 49 && nodeName[1] <= 57) {
 				doPrint = true;
 			}
 		}
@@ -83,13 +83,6 @@ int main(void) {
 		getline(std::cin, input_line);
 		doc.Parse(input_line.c_str());
 	}
-
-
-	//if (!doc.LoadFile()) {
-	//	std::cerr << "XML load failed. Is XML file valid??" << std::endl;
-	//	std::cerr << "TiXmlDocument.ErrorDesc(): " << doc.ErrorDesc() << std::endl;
-	//	return 1;
-	//}
 
 	std::cout << "[";
 	iterate(&doc);
