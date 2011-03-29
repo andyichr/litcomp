@@ -1,3 +1,5 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<div>
 <h2>Current Development Objective</h2>
 
 <em>Enable execution of source blocks</em>
@@ -43,6 +45,12 @@ org.andyic.litcomp.index.
 
 <p>A program fragment must be identified uniquely in order to be executed by the server. Program fragments are identified uniquely using a combination of fragment index and page hash. Including page hash as a component of the identifier ensures that the index of the program fragment will not have changed in the time between when the page was sent to the client and when the server was asked to run the fragment.</p>
 
+<pre class="source" data-lang="bash"><![CDATA[
+test
+test
+test
+]]></pre>
+
 <h4>org.andyic.litcomp.index.ProgramFragmentIndexer</h4>
 
 <p><em>ProgramFragmentIndexer</em> maps the wiki data domain into a domain of bare program fragments. Program fragments are keyed by wiki page title, section title, and fragment language. An example program fragment index key is <em>Litcomp/Example_Program_Fragment.perl</em>. The value of this example key would be the raw program source.</p>
@@ -52,5 +60,6 @@ org.andyic.litcomp.index.
 <p>The following block of code is an example program fragment embedded in a wiki page.</p>
 
 <pre class="source" data-lang="perl">
-print "Hello World!";
+print &quot;Hello World!&quot;;
 </pre>
+</div>
