@@ -77,12 +77,14 @@ bool iterate(TiXmlNode* pParent, bool first = true) {
 
 int main(void) {
 	TiXmlDocument doc("/dev/stdin");
-	std::string input_line;
+	std::string input, input_line;
 
 	while (std::cin) {
 		getline(std::cin, input_line);
-		doc.Parse(input_line.c_str());
+		input += input_line + "\n";
 	}
+
+	doc.Parse(input.c_str());
 
 	std::cout << "[";
 	iterate(&doc);
