@@ -15,4 +15,4 @@ foreach ( @$program_fragment_tuple ) {
 }
 
 my $result_json = to_json( \@run_indexes );
-print $result_json;
+print $result_json, "\n";
