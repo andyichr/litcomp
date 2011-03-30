@@ -391,13 +391,28 @@ $(window).load(function() {
 
 						// runnable program fragments
 						RPC({
-							method: "index",
+							method: "take",
 							params: {
-								key: "ProgramFragmentRunIndexes/" + pageMeta.title + "/" + pageMeta.hash
+								"take": {
+									"take": {
+										"this": {
+											"title": pageMeta.title,
+											"hash": pageMeta.hash
+										},
+										"from": "ArticleVersion",
+										"to": "WikitextDocument",
+										"using": "Source"
+									},
+									"from": "WikitextDocument",
+									"to": "ProgramFragmentTuple",
+									"using": "ProgramFragment"
+								},
+								"from": "ProgramFragmentTuple",
+								"to": "NatTuple",
+								"using": "RunIndex"
 							},
 							onData: function(data) {
-								return;
-								var runIndexes = JSON.parse(data.result.value);
+								var runIndexes = data.result.value;
 
 								// section behavior
 								$("article").find("h1, h2, h3, h4, h5, h6").each(function(hIndex, hEl) {
