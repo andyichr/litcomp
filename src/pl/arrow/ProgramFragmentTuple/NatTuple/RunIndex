@@ -1,0 +1,18 @@
+#!/usr/bin/env perl
+
+use JSON;
+use Data::Dumper;
+
+use strict;
+use warnings;
+
+my @input = <STDIN>;
+my @run_indexes = ();
+my $program_fragment_tuple = from_json( join( "", @input ) );
+
+foreach ( @$program_fragment_tuple ) {
+	push( @run_indexes, $_->{section_index} );
+}
+
+my $result_json = to_json( \@run_indexes );
+print $result_json;
