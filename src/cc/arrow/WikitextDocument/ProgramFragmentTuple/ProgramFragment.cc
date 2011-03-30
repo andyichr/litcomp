@@ -16,6 +16,11 @@ void printJSONString(const char *string) {
 	std::cout << "\"";
 
 	for (int i = 0; string[i]; i++) {
+		if (string[i] == '\n') {
+			std::cout << "\\n";
+			continue;
+		}
+
 		if (string[i] == '"' || string[i] == '\\') {
 			std::cout << "\\";
 		}
