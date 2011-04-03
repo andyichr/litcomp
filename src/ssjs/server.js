@@ -169,11 +169,9 @@ var INDEXER_OUT = argv[ "indexer-out" ];
 			/**
 			 * realize a value in the model
 			 */
-			take: function( req ) {
+			model: function( req ) {
 				// interface index data store
-				var rpcReq = {
-					"take": req.params
-				};
+				var rpcReq = req.params;
 				modelRPC.realize( rpcReq, function( res ) {
 					client.send( JSON.stringify( {
 						id: req.id,

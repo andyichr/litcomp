@@ -391,26 +391,11 @@ $(window).load(function() {
 
 						// runnable program fragments
 						RPC({
-							method: "take",
-							params: {
-								"take": {
-									"take": {
-										"this": {
-											"title": pageMeta.title,
-											"hash": pageMeta.hash
-										},
-										"from": "ArticleVersion",
-										"to": "WikitextDocument",
-										"using": "Source"
-									},
-									"from": "WikitextDocument",
-									"to": "ProgramFragmentTuple",
-									"using": "ProgramFragment"
-								},
-								"from": "ProgramFragmentTuple",
-								"to": "NatTuple",
-								"using": "RunIndex"
-							},
+							method: "model",
+							params: [ "map", "RunIndex : _ -> NatTuple",
+								[ "map", "ProgramFragment : _ -> ProgramFragmentTuple", 
+									[ "map", "Source : ArticleVersion -> WikitextDocument",
+										{ "title": pageMeta.title, "hash": pageMeta.hash } ] ] ],
 							onData: function(data) {
 								var runIndexes = data.result.value;
 
@@ -470,21 +455,10 @@ $(window).load(function() {
 				// add heading anchors & section title data
 
 				RPC({
-					method: "take",
-					params: {
-						"take": {
-							"this": {
-								"title": pageMeta.title,
-								"hash": pageMeta.hash
-							},
-							"from": "ArticleVersion",
-							"to": "WikitextDocument",
-							"using": "Source"
-						},
-						"from": "WikitextDocument",
-						"to": "StringTuple",
-						"using": "SectionTitle"
-					},
+					method: "model",
+					params: [ "map", "SectionTitle : _ -> StringTuple",
+						[ "map", "Source : ArticleVersion -> WikitextDocument",
+							{ "title": pageMeta.title, "hash": pageMeta.hash } ] ],
 					onData: function(data) {
 						$("h2, h3, h4, h5, h6").each(function(hIndex, hEl) {
 							$(hEl).data("section_id", data.result.value[hIndex]);

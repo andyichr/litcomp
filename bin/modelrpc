@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-exec "$LITCOMP_HOME"/src/pl/rpc.pl
+exec "$LITCOMP_HOME"/src/pl/rpc2.pl
