@@ -1,0 +1,19 @@
+#!/usr/bin/env perl
+
+use JSON;
+
+use strict;
+use warnings;
+
+my @input = <STDIN>;
+my $tuple = from_json( join( "", @input ) );
+
+my %table;
+my $i = 0;
+
+foreach ( @$tuple ) {
+	$table{$i++} = $_;
+}
+
+my $result_json = to_json( \%table );
+print $result_json, "\n";
