@@ -40,14 +40,14 @@ push( @arrows, $arrow );
 
 print $json->encode( $result );
 
+POSIX::mkfifo( $in_file, 0700 );
+POSIX::mkfifo( $out_file, 0700 );
+
 close STDIN;
 close STDOUT;
 close STDERR;
 
 # process requests
-POSIX::mkfifo( $in_file, 0700 );
-POSIX::mkfifo( $out_file, 0700 );
-
 while ( 1 ) {
 
 	# read request
