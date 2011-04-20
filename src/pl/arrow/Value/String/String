@@ -1,0 +1,14 @@
+#!/usr/bin/env perl
+
+use JSON;
+use Data::Dumper;
+
+use warnings;
+use strict;
+
+my $json = JSON->new->allow_nonref;
+
+my @input = <STDIN>;
+my $req = $json->decode( join( "", @input ) );
+
+print "$req";
