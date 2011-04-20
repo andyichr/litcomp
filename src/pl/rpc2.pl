@@ -11,8 +11,10 @@ use Data::Dumper;
 
 use strict;
 
+my $json = JSON->new->allow_nonref;
+
 my @input = <STDIN>;
-my $req = from_json( join( "", @input ) );
+my $req = $json->decode( join( "", @input ) );
 
 my $error = sub {
 	my $message = shift;
@@ -87,9 +89,59 @@ sub parse_map {
 }
 
 ################################################################################
-# generates a map structure given a requested category map
+# derives a map structure given a dynamic category and requested map
 ################################################################################
-sub model_map {
+sub dynamic_cat_map {
+	my %args = @_;
+	my $req = $args{"req"};
+	my $cat = $args{"category"};
+
+	my $map = parse_map( $req->[1] );
+
+	# search category for matching arrow
+	foreach ( @{$cat->{"arrows"}} ) {
+		my $arrow = $_;
+
+		if ( $map->{"function"}->() eq $arrow->{"name"}
+				&& $map->{"domain"}->() eq $arrow->{"domain"}
+				&& $map->{"codomain"}->() eq $arrow->{"codomain"} ) {
+			return {
+				"read" => sub {
+					open my $fh, $arrow->{"out"};
+					my @lines = <$fh>;
+					close $fh;
+					my $buf = join( "", @lines );
+					return $buf;
+				},
+				"write" => sub {
+					my $buf = shift;
+					open my $fh, ">" . $arrow->{"in"};
+					print $fh $buf;
+					close $fh;
+				},
+				"destroy" => sub {
+					kill SIGHUP, $arrow->{"pid"};
+					waitpid $arrow->{"pid"}, 0;
+					unlink $arrow->{"in"};
+					unlink $arrow->{"out"};
+				},
+				"domain" => sub {
+					return $arrow->{"domain"};
+				},
+				"codomain" => sub {
+					return $arrow->{"codomain"};
+				}
+			};
+		}
+	}
+
+	return undef;
+}
+
+################################################################################
+# derives a map structure given a requested category map
+################################################################################
+my $model_map = sub {
 	my %args = @_;
 	my $req = $args{"req"};
 	my $expected_domain = $args{"expected_domain"};
@@ -155,14 +207,14 @@ sub model_map {
 			$codomain;
 		}
 	};
-}
+};
 
 ################################################################################
 # generates a map structure given a literal value
 ################################################################################
 sub value_map {
 	my $value = shift;
-	my $buf = to_json $value;
+	my $buf = $json->encode( $value );
 
 	return {
 		"read" => sub {
@@ -186,10 +238,43 @@ sub value_map {
 }
 
 ################################################################################
-# derive a "map" structure given a request
+# derive a function which derives a map given a request. the request argument
+# of this function must define a category
+################################################################################
+sub cat_map_fn {
+	my %args = @_;
+	my $req = $args{"req"};
+	my $map_fn = $args{"map_fn"};
+
+	my $cat_map = req_map( $req, $map_fn );
+	$cat_map->{"write"}->();
+	my $cat_json = $cat_map->{"read"}->();
+	my $cat = $json->decode( $cat_json );
+
+	return sub {
+		# if arrow exists in generated category, derive a map structure
+		my %args = @_;
+
+		my $map = dynamic_cat_map(
+			"req" => $args{"req"},
+			"expected_domain" => $args{"expected_domain"},
+			"category" => $cat
+		);
+
+		if ( ! defined( $map ) ) {
+			$map = $map_fn->( %args );
+		}
+
+		return $map;
+	};
+}
+
+################################################################################
+# derive a map structure given a request
 ################################################################################
 sub req_map {
 	my $req = shift;
+	my $map_fn = shift;
 
 	my $type = sub {
 		if ( ref( $req ) eq "ARRAY" ) {
@@ -199,14 +284,36 @@ sub req_map {
 		}
 	}->();
 
+	# in cases where a category is generated, it is not necessarily
+	# the case that model_map should be used to derive a map from the
+	# request
+
+	if ( ! defined( $map_fn ) ) {
+		$map_fn = sub {
+			$model_map->( @_ );
+		};
+	}
+
 	switch ( $type ) {
 
 		case "map" {
-			my $child_map = req_map( $req->[2] );
-			return compose_map( $child_map, model_map(
+			my $child_map = req_map( $req->[2], $map_fn );
+
+			my $map = $map_fn->(
 				"req" => $req,
 				"expected_domain" => $child_map->{"codomain"}->()
-			) );
+			); 
+
+			return compose_map( $child_map, $map );
+		}
+
+		case "in" {
+			$map_fn = cat_map_fn(
+				"req" => $req->[1],
+				"map_fn" => $map_fn
+			);
+
+			return req_map( $req->[2], $map_fn );
 		}
 
 		else {
