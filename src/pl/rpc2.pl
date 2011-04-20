@@ -97,13 +97,18 @@ sub dynamic_cat_map {
 	my $cat = $args{"category"};
 
 	my $map = parse_map( $req->[1] );
+	my $map_domain = $map->{"domain"}->();
+
+	if ( $map_domain eq "_" && $args{"expected_domain"} ) {
+		$map_domain = $args{"expected_domain"};
+	}
 
 	# search category for matching arrow
 	foreach ( @{$cat->{"arrows"}} ) {
 		my $arrow = $_;
 
 		if ( $map->{"function"}->() eq $arrow->{"name"}
-				&& $map->{"domain"}->() eq $arrow->{"domain"}
+				&& $map_domain eq $arrow->{"domain"}
 				&& $map->{"codomain"}->() eq $arrow->{"codomain"} ) {
 			return {
 				"read" => sub {
