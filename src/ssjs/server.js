@@ -203,13 +203,17 @@ var INDEXER_OUT = argv[ "indexer-out" ];
 			 */
 			exec: function( req ) {
 				// resolve section
-				//FIXME use index data store rather than interfacing index directly
-				var indexKey = "SectionTitle/" + req.params.title.replace( "..", "" ) + "/" + req.params.pageHash.replace( "..", "" ) + "/" + parseInt( req.params.index );
-				fs.readFile( WIKI_INDEX_DIR + "/" + indexKey, function( err, sectionTitle ) {
-					if ( err ) {
-						console.log( "Error looking up title for section index: " + err );
-						return;
-					}
+				var rpcReq =
+					[ "in",
+						[ "map", "HashTableLookup : String -> Category", new String(req.params.index-1) ],
+						[ "map", "Lookup : _ -> Value",
+							[ "map", "Enumeration : _ -> HashTable",
+								[ "map", "Tuple : _ -> Tuple",
+									[ "map", "SectionTitle : _ -> StringTuple",
+										[ "map", "Source : ArticleVersion -> WikitextDocument",
+											{ "title": req.params.title, "hash": req.params.pageHash } ] ] ] ] ] ];
+				modelRPC.realize( rpcReq, function( res ) {
+					var sectionTitle = res.result.value;
 
 					var child = spawn( "bash", [ "-c", "See: " + req.params.title + "#" + sectionTitle ], {
 						cwd: WIKI_DIR + "/.cache"
