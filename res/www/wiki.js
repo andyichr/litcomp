@@ -401,7 +401,6 @@ $(window).load(function() {
 
 								// section behavior
 								$("article").find("h1, h2, h3, h4, h5, h6").each(function(hIndex, hEl) {
-									hIndex++;
 
 									if ($.inArray(hIndex, runIndexes) != -1) {
 										var $out;
@@ -423,6 +422,8 @@ $(window).load(function() {
 											}
 										});
 									}
+
+									hIndex++;
 								});
 
 							}
