@@ -7,6 +7,7 @@ echo "Running test suite..."
 
 # execute all scripts in src/test
 export SRC_DIR="$(pwd)"/src
+export LITCOMP_HOME="$(pwd)"
 export WIKI_DIR="$(pwd)"/test/wiki
 export TEST_DIR="$SRC_DIR"/test
 
