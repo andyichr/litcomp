@@ -1,0 +1,24 @@
+#!/usr/bin/env perl
+
+use JSON;
+use Data::Dumper;
+
+use warnings;
+use strict;
+
+my $json = JSON->new->allow_nonref;
+
+my @input = <STDIN>;
+my $req = $json->decode( join( "", @input ) );
+
+my $response = {};
+
+foreach ( @{$req} ) {
+	my $fragment = $_;
+	my $sec_index = $fragment->{"section_index"};
+	$response->{"$sec_index"} = $fragment;
+}
+
+my $response_json = $json->encode( $response );
+print $response_json;
+print "\n";
