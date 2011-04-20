@@ -1,0 +1,70 @@
+#!/usr/bin/env perl
+
+local $SIG{ALRM} = sub { exit 1 };
+alarm 10;
+
+use Data::Dumper;
+use JSON;
+use POSIX;
+use File::Temp qw/ :POSIX /;
+
+my $json = JSON->new->allow_nonref;
+
+# read information from which the category will be derived
+my @lines = <STDIN>;
+my $req = $json->decode( join( "", @lines ) );
+my $lookup_key = $req;
+
+my $in_file = tmpnam();
+my $out_file = tmpnam();
+
+# define category
+my @objects = ( "HashTable", "Value" );
+my @arrows = ();
+
+my $result = {
+	"objects" => \@objects,
+	"arrows" => \@arrows
+};
+
+my $arrow = {
+	"name" => "Lookup",
+	"domain" => "HashTable",
+	"codomain" => "Value",
+	"in" => $in_file,
+	"out" => $out_file,
+	"pid" => $$
+};
+
+push( @arrows, $arrow );
+
+print $json->encode( $result );
+
+close STDIN;
+close STDOUT;
+close STDERR;
+
+# process requests
+POSIX::mkfifo( $in_file, 0700 );
+POSIX::mkfifo( $out_file, 0700 );
+
+while ( 1 ) {
+
+	# read request
+	open my $in_fh, $in_file;
+	my @req_lines = <$in_fh>;
+	close $in_fh;
+
+	my $req_json = join( "", @req_lines );
+	my $req = $json->decode( $req_json );
+
+	# process request
+	$result = $req->{$lookup_key};
+
+	# output request
+	my $out_json = $json->encode( $result );
+	open my $out_fh, "> " . $out_file;
+	print $out_fh $out_json;
+	print $out_fh "\n";
+	close $out_fh;
+}
