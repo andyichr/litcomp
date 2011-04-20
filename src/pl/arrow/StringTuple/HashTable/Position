@@ -1,0 +1,25 @@
+#!/usr/bin/env perl
+
+use JSON;
+use Data::Dumper;
+
+use warnings;
+use strict;
+
+my $json = JSON->new->allow_nonref;
+
+my @input = <STDIN>;
+my $req = $json->decode( join( "", @input ) );
+
+my $response = {};
+my $pos = 0;
+
+foreach ( @{$req} ) {
+	my $string = $_;
+	$response->{"$string"} = $pos;
+	$pos++;
+}
+
+my $response_json = $json->encode( $response );
+print $response_json;
+print "\n";
