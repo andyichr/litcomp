@@ -405,8 +405,6 @@ $(window).load(function() {
 
 									if ($.inArray(hIndex, runIndexes) != -1) {
 										var $out;
-										var $runLink = $("<a>Run</a>");
-										var $runLinkContainer = $("<span/>");
 
 										// section is runnable; define run controls
 										$(hEl).trigger("nav-data", {
