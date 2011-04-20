@@ -12,3 +12,4 @@ my @input = <STDIN>;
 my $req = $json->decode( join( "", @input ) );
 
 print "$req";
+print "\n";
