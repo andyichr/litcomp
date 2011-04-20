@@ -138,7 +138,7 @@ bool iterate(TiXmlNode* pParent, bool first = true) {
 
 					first = false;
 					sourceIndex++;
-					std::cout << "{\"section_index\": " << sectionIndex;
+					std::cout << "{\"section_index\": " << (sectionIndex - 1);
 					std::cout << ", \"pre_index\": " << sourceIndex;
 					std::cout << ", \"lang\": ";
 					printJSONString(langName);
