@@ -59,7 +59,7 @@ while ( 1 ) {
 	my $req = $json->decode( $req_json );
 
 	# process request
-	$result = $req->{$lookup_key};
+	my $result = $req->{$lookup_key};
 
 	# output request
 	my $out_json = $json->encode( $result );
