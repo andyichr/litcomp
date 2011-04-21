@@ -5,7 +5,7 @@ var fs = require( "fs" );
  * @return array of random integers
  */
 exports.makeEntropy = (function() {
-	var is = fs.createReadStream( "/dev/random" );
+	var is = fs.createReadStream( "/dev/urandom" );
 	var req = [];
 
 	is.on( "data", function( data ) {
