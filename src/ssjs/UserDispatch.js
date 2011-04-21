@@ -162,58 +162,50 @@ exports.makeDispatchTable = function( dispatchArgs ) {
 				req.on( "end", function() { onEnd() } );
 
 				//FIXME add timeout so that client cannot halt indexing with bad request
-				dispatchArgs.index( {
-					"title": title,
-					"size": req.headers[ "content-length" ],
-					"streamReady": function( indexerOs ) {
-						dispatchArgs.tmpWikiFileName( function( wikiTmpFile ) {
-							var os = fs.createWriteStream( wikiTmpFile );
+				dispatchArgs.tmpWikiFileName( function( wikiTmpFile ) {
+					var os = fs.createWriteStream( wikiTmpFile );
 
-							// write buffered data
-							while ( dataBuf.length ) {
-								var curBuf = dataBuf.shift();
-								indexerOs.write( curBuf );
-								os.write( curBuf );
-							}
+					// write buffered data
+					while ( dataBuf.length ) {
+						var curBuf = dataBuf.shift();
+						os.write( curBuf );
+					}
 
-							// append req body to temp file over series of chunks
-							var wrote = false;
-							onData = function( chunk ) {
-								indexerOs.write( chunk );
-								wrote = os.write( chunk );
-							};
+					// append req body to temp file over series of chunks
+					var wrote = false;
+					onData = function( chunk ) {
+						wrote = os.write( chunk );
+					};
 
-							onEnd = function() {
+					onEnd = function() {
 
-								var onDrain = function() {
-									os.end();
-									// replace target file with tmp file
-									fs.rename( wikiTmpFile, wikiFile, function( err ) {
-										if ( err ) {
-											res.writeHead( 500 );
-											res.end();
-											console.log( "Error writing wiki file '" + wikiFile + "': '" + err + "'" );
-											return;
-										}
-
-										console.log( "Wrote new contents to wiki file: " + wikiFile );
-										dispatchArgs.updateFile( wikiFile );
-										res.writeHead( 200 );
-										res.end();
-									} );
-								};
-
-								if ( wrote ) {
-									onDrain();
-								} else {
-									os.on( "drain", function() { onDrain() } );
+						var onDrain = function() {
+							os.end();
+							// replace target file with tmp file
+							fs.rename( wikiTmpFile, wikiFile, function( err ) {
+								if ( err ) {
+									res.writeHead( 500 );
+									res.end();
+									console.log( "Error writing wiki file '" + wikiFile + "': '" + err + "'" );
+									return;
 								}
-							};
 
-							if ( ended ) {
-								onEnd();
-							}
-						} );
+								console.log( "Wrote new contents to wiki file: " + wikiFile );
+								dispatchArgs.updateFile( wikiFile );
+								res.writeHead( 200 );
+								res.end();
+							} );
+						};
+
+						if ( wrote ) {
+							onDrain();
+						} else {
+							os.on( "drain", function() { onDrain() } );
+						}
+					};
+
+					if ( ended ) {
+						onEnd();
 					}
 				} );
 			}
