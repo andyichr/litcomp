@@ -1,7 +1,66 @@
-#!/usr/bin/env bash
+#!/usr/bin/env perl
 
-PROGRAM_FRAGMENT_SRC=$(echo $1 | sed -e 's/#/\//');
-PROGRAM_FRAGMENT="$WIKI_INDEX_PATH/ProgramFragment/$PROGRAM_FRAGMENT_SRC"
-PROGRAM_FRAGMENT_LANG="$(cat "$WIKI_INDEX_PATH/ProgramFragmentLang/$PROGRAM_FRAGMENT_SRC")"
-shift
-exec "$PROGRAM_FRAGMENT_LANG" "$PROGRAM_FRAGMENT" "$@"
+use JSON;
+use Data::Dumper;
+use File::Temp qw/ :POSIX /;
+
+use strict;
+use warnings;
+
+my $json = JSON->new->allow_nonref;
+
+my $program_fragment_id = $ARGV[0];
+my @program_fragment_id_parts = split( "#", $program_fragment_id );
+
+my $req =
+	[ "in",
+		[ "map", "ArticleSnapshot : String -> Category", "Current" ],
+		[ "in",
+			[ "map", "HashTableLookup : String -> Category",
+				[ "map", "String : Value -> String",
+					[ "in",
+						[ "map", "HashTableLookup : String -> Category", $program_fragment_id_parts[1] ],
+						[ "map", "Lookup : _ -> Value",
+							[ "map", "Position : _ -> HashTable",
+								[ "map", "SectionTitle : _ -> StringTuple",
+									[ "map", "Source : _ -> WikitextDocument",
+										[ "map", "Current : ArticleTitle -> ArticleVersion",
+											 $program_fragment_id_parts[0] ] ] ] ] ] ] ] ],
+			[ "map", "Lookup : _ -> Value",
+				[ "map", "SectionIndex : _ -> HashTable",
+					[ "map", "ProgramFragment : _ -> ProgramFragmentTuple",
+						[ "map", "Source : _ -> WikitextDocument",
+							[ "map", "Current : ArticleTitle -> ArticleVersion",
+								$program_fragment_id_parts[0] ] ] ] ] ] ] ];
+
+my $req_json = $json->encode( $req );
+my $req_file = tmpnam();
+open my $req_file_fh, ">" . $req_file;
+print $req_file_fh $req_json;
+close $req_file_fh;
+
+# execute RPC request
+my $rpc_res_json = `modelrpc < $req_file`;
+unlink $req_file;
+
+my $res = $json->decode( $rpc_res_json );
+
+# execute program
+my $prog_dir = tmpnam();
+mkdir $prog_dir;
+my $prog_file = $prog_dir . "/" . $program_fragment_id;
+
+open my $prog_file_fh, ">" . $prog_file;
+print $prog_file_fh "#!/usr/bin/env " . $res->{"lang"} . "\n";
+print $prog_file_fh $res->{"source"};
+close $prog_file_fh;
+
+chmod 0755, $prog_file;
+
+my @args = @ARGV;
+$args[0] = $prog_file;
+system @args;
+
+# clean up
+unlink $prog_file;
+rmdir $prog_dir;

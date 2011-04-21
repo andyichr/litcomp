@@ -19,8 +19,8 @@ done
 echo "Environment OK"
 
 # define global constants
-export LITCOMP_HOME="$1"
-export WIKI_DIR="$2"
+export LITCOMP_HOME="$(cd "$1" && pwd)"
+export WIKI_DIR="$(cd "$2" && pwd)"
 
 pushd "$LITCOMP_HOME" >/dev/null
 	export PATH="$(pwd)/bin:$PATH"
