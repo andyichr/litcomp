@@ -37,6 +37,7 @@ var WIKITEXT_IN = argv[ "wiki-html-in" ];
 var INDEX_RPC_OUT = argv[ "index-rpc-out" ];
 var INDEX_RPC_IN = argv[ "index-rpc-in" ];
 var INDEXER_OUT = argv[ "indexer-out" ];
+var PORT = argv[ "port" ];
 
 (function() {
 	/**
@@ -159,10 +160,12 @@ var INDEXER_OUT = argv[ "indexer-out" ];
 		// a handler has been resolved for the request, so request processing may continue
 		pathHandler( req, res );
 	} );
-	server.listen( 8070, "127.0.0.1" );
+	server.listen( PORT, "127.0.0.1" );
 
 	// handle realtime communication
-	var socket = io.listen( server );
+	var socket = io.listen( server, {
+		origins: "*:*"
+	} );
 	//FIXME create unique client ID per connection and combine this with client request id
 	socket.on( "connection", function( client ) {
 		var reqMethodTable = {
@@ -267,4 +270,4 @@ var INDEXER_OUT = argv[ "indexer-out" ];
 	} );
 }());
 
-console.log( "Server running at http://127.0.0.1:8070/" );
+console.log( "Server running at http://127.0.0.1:" + PORT + "/" );

@@ -512,6 +512,8 @@ $(window).load(function() {
 				return function() {
 					console.log("begin connecting");
 					var path =  window.location.pathname.replace(/[^\/]*$/,"");
+					console.log( "instantiating Socket.IO with:" );
+					console.log( window.location.hostname );
 					socket = new io.Socket(window.location.hostname, {
 						resource: (path == "/")
 								? "socket.io"

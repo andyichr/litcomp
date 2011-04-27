@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-if [ $# -ne 2 ]; then
-	echo "Usage: litcompd LITCOMP_HOME WIKI_DIR" 1>&2
+if [ $# -lt 2 ]; then
+	echo "Usage: litcompd LITCOMP_HOME WIKI_DIR PORT" 1>&2
 	exit 1
 fi
 
@@ -21,6 +21,9 @@ echo "Environment OK"
 # define global constants
 export LITCOMP_HOME="$(cd "$1" && pwd)"
 export WIKI_DIR="$(cd "$2" && pwd)"
+export LITCOMP_PORT="$3"
+
+[ "$LITCOMP_PORT" == "" ] && export LITCOMP_PORT="8070"
 
 pushd "$LITCOMP_HOME" >/dev/null
 	export PATH="$(pwd)/bin:$PATH"
@@ -78,5 +81,6 @@ pushd "$LITCOMP_HOME" >/dev/null
 			--wiki-html-in="$OUT_FIFO" \
 			--indexer-out=>(tee $INDEXER_IN_FIFO > $SECTITLE_INDEXER_IN_FIFO) \
 			--index-rpc-out="$INDEX_RPC_IN_FIFO" \
-			--index-rpc-in="$INDEX_RPC_OUT_FIFO"
+			--index-rpc-in="$INDEX_RPC_OUT_FIFO" \
+			--port="$LITCOMP_PORT"
 popd
