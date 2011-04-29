@@ -512,13 +512,16 @@ $(window).load(function() {
 				return function() {
 					console.log("begin connecting");
 					var path =  window.location.pathname.replace(/[^\/]*$/,"");
-					console.log( "instantiating Socket.IO with:" );
-					console.log( window.location.hostname );
-					socket = new io.Socket(window.location.hostname, {
-						resource: (path == "/")
-								? "socket.io"
-								: (path + "socket.io")
-					});
+					console.log( "using protocol: " + window.location.protocol );
+					if ( window.location.protocol == "https:" ) {
+						socket = new io.Socket(null, {port: 443, secure: true, rememberTransport: false});
+					} else {
+						socket = new io.Socket(window.location.hostname, {
+							resource: (path == "/")
+									? "socket.io"
+									: (path + "socket.io")
+						});
+					}
 					(function() {
 						var thisSocket = socket;
 						socket.on("connect", function() {
