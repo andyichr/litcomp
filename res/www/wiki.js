@@ -164,7 +164,7 @@ $(window).load(function() {
 						});
 
 						// insert in order
-						var $runLinkContainer = $("<span/>").append($runLink).data("priority", argv.priority || 0);
+						var $runLinkContainer = $("<span/>").addClass(argv.name).append($runLink).data("priority", argv.priority || 0);
 						var aAfterEl = null;
 						var navEmpty = true;
 						$hButtonContainer.find("> span").each(function(aIndex, aEl) {
@@ -175,6 +175,11 @@ $(window).load(function() {
 						});
 
 						var $sep = $("<span> | </span>");
+
+						if ($hButtonContainer.find("." + argv.name).length > 0) {
+							console.log( "skipping add of duplicate nav element: " + argv.name );
+							return;
+						}
 
 						if (aAfterEl) {
 							$(aAfterEl).after($sep).after($runLinkContainer);
