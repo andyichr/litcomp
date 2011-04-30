@@ -530,6 +530,7 @@ $(window).load(function() {
 					(function() {
 						var thisSocket = socket;
 						socket.on("connect", function() {
+							onData = {};
 							if (thisSocket == socket) {
 								onSocketConnect();
 							}
@@ -544,6 +545,7 @@ $(window).load(function() {
 						socket.on("disconnect", function() {
 							if (thisSocket == socket) {
 								onSocketDisconnect();
+								rpcCleanup();
 							}
 						});
 					}());
@@ -555,15 +557,25 @@ $(window).load(function() {
 				};
 			}());
 
-			RPC = function(argv) {
-				var id = uid();
-				onData[id] = argv.onData;
-				socketSend(JSON.stringify({
-					id: id,
-					method: argv.method,
-					params: argv.params
-				}));
-			};
+			var rpcCleanup = (function() {
+				var ids = [];
+				RPC = function(argv) {
+					var id = uid();
+					ids.push( id );
+					onData[id] = argv.onData;
+					socketSend(JSON.stringify({
+						id: id,
+						method: argv.method,
+						params: argv.params
+					}));
+				};
+
+				return function() {
+					for (var i = 0; i < ids.length; i++) {
+						delete onData[ids[i]];
+					}
+				};
+			}());
 
 			/** 
 			 * sectionEdit creates an editor widget which edits a subsection of the document keyed on header index
